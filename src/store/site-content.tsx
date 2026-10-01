@@ -24,6 +24,11 @@ import {
   type Review,
 } from "@/data/content";
 
+const hasSupabaseConfig = Boolean(
+  (import.meta.env["VITE_SUPABASE_URL"] || process.env["SUPABASE_URL"]) &&
+    (import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] || process.env["SUPABASE_PUBLISHABLE_KEY"]),
+);
+
 type Ctx = {
   content: CmsContent;
   reviews: Review[];
@@ -90,6 +95,11 @@ export function SiteContentProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (!hasSupabaseConfig) {
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
     Promise.allSettled([api.getContent(), api.getReviews(), api.getNews()]).then(([c, r, n]) => {
       if (cancelled) return;
@@ -104,6 +114,11 @@ export function SiteContentProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (!hasSupabaseConfig) {
+      setAuthReady(true);
+      return;
+    }
+
     const resolve = async (email: string | null) => {
       setUserEmail(email);
       const admin = email ? await api.checkAdmin() : false;
