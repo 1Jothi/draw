@@ -14,11 +14,18 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ClientsRouteImport } from './routes/clients'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as NewsRouteImport } from './routes/news'
 import { Route as PortfolioRouteImport } from './routes/portfolio'
 import { Route as ReviewsRouteImport } from './routes/reviews'
 import { Route as ServicesRouteImport } from './routes/services'
-import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
+import { Route as AdminLoginRouteImport } from './routes/admin.login'
+import { Route as ServicesIndexRouteImport } from './routes/services.index'
+import { Route as ServicesCategoryRouteImport } from './routes/services.$category'
+import { Route as ServicesCategoryIndexRouteImport } from './routes/services.$category.index'
+import { Route as ServicesCategorySubRouteImport } from './routes/services.$category.$sub'
+import { Route as ServicesCategorySubIndexRouteImport } from './routes/services.$category.$sub.index'
+import { Route as ServicesCategorySubServiceRouteImport } from './routes/services.$category.$sub.$service'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -45,6 +52,11 @@ const ContactRoute = ContactRouteImport.update({
   path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NewsRoute = NewsRouteImport.update({
   id: '/news',
   path: '/news',
@@ -65,48 +77,98 @@ const ServicesRoute = ServicesRouteImport.update({
   path: '/services',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ServicesSlugRoute = ServicesSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AdminRoute,
+} as any)
+const ServicesIndexRoute = ServicesIndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => ServicesRoute,
 } as any)
+const ServicesCategoryRoute = ServicesCategoryRouteImport.update({
+  id: '/$category',
+  path: '/$category',
+  getParentRoute: () => ServicesRoute,
+} as any)
+const ServicesCategoryIndexRoute = ServicesCategoryIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ServicesCategoryRoute,
+} as any)
+const ServicesCategorySubRoute = ServicesCategorySubRouteImport.update({
+  id: '/$sub',
+  path: '/$sub',
+  getParentRoute: () => ServicesCategoryRoute,
+} as any)
+const ServicesCategorySubIndexRoute =
+  ServicesCategorySubIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => ServicesCategorySubRoute,
+  } as any)
+const ServicesCategorySubServiceRoute =
+  ServicesCategorySubServiceRouteImport.update({
+    id: '/$service',
+    path: '/$service',
+    getParentRoute: () => ServicesCategorySubRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/clients': typeof ClientsRoute
   '/contact': typeof ContactRoute
+  '/login': typeof LoginRoute
   '/news': typeof NewsRoute
   '/portfolio': typeof PortfolioRoute
   '/reviews': typeof ReviewsRoute
   '/services': typeof ServicesRouteWithChildren
-  '/services/$slug': typeof ServicesSlugRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/services/$category': typeof ServicesCategoryRouteWithChildren
+  '/services/': typeof ServicesIndexRoute
+  '/services/$category/$sub': typeof ServicesCategorySubRouteWithChildren
+  '/services/$category/': typeof ServicesCategoryIndexRoute
+  '/services/$category/$sub/$service': typeof ServicesCategorySubServiceRoute
+  '/services/$category/$sub/': typeof ServicesCategorySubIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/clients': typeof ClientsRoute
   '/contact': typeof ContactRoute
+  '/login': typeof LoginRoute
   '/news': typeof NewsRoute
   '/portfolio': typeof PortfolioRoute
   '/reviews': typeof ReviewsRoute
-  '/services': typeof ServicesRouteWithChildren
-  '/services/$slug': typeof ServicesSlugRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/services': typeof ServicesIndexRoute
+  '/services/$category': typeof ServicesCategoryIndexRoute
+  '/services/$category/$sub/$service': typeof ServicesCategorySubServiceRoute
+  '/services/$category/$sub': typeof ServicesCategorySubIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/clients': typeof ClientsRoute
   '/contact': typeof ContactRoute
+  '/login': typeof LoginRoute
   '/news': typeof NewsRoute
   '/portfolio': typeof PortfolioRoute
   '/reviews': typeof ReviewsRoute
   '/services': typeof ServicesRouteWithChildren
-  '/services/$slug': typeof ServicesSlugRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/services/$category': typeof ServicesCategoryRouteWithChildren
+  '/services/': typeof ServicesIndexRoute
+  '/services/$category/$sub': typeof ServicesCategorySubRouteWithChildren
+  '/services/$category/': typeof ServicesCategoryIndexRoute
+  '/services/$category/$sub/$service': typeof ServicesCategorySubServiceRoute
+  '/services/$category/$sub/': typeof ServicesCategorySubIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -116,11 +178,18 @@ export interface FileRouteTypes {
     | '/admin'
     | '/clients'
     | '/contact'
+    | '/login'
     | '/news'
     | '/portfolio'
     | '/reviews'
     | '/services'
-    | '/services/$slug'
+    | '/admin/login'
+    | '/services/$category'
+    | '/services/'
+    | '/services/$category/$sub'
+    | '/services/$category/'
+    | '/services/$category/$sub/$service'
+    | '/services/$category/$sub/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -128,11 +197,15 @@ export interface FileRouteTypes {
     | '/admin'
     | '/clients'
     | '/contact'
+    | '/login'
     | '/news'
     | '/portfolio'
     | '/reviews'
+    | '/admin/login'
     | '/services'
-    | '/services/$slug'
+    | '/services/$category'
+    | '/services/$category/$sub/$service'
+    | '/services/$category/$sub'
   id:
     | '__root__'
     | '/'
@@ -140,19 +213,27 @@ export interface FileRouteTypes {
     | '/admin'
     | '/clients'
     | '/contact'
+    | '/login'
     | '/news'
     | '/portfolio'
     | '/reviews'
     | '/services'
-    | '/services/$slug'
+    | '/admin/login'
+    | '/services/$category'
+    | '/services/'
+    | '/services/$category/$sub'
+    | '/services/$category/'
+    | '/services/$category/$sub/$service'
+    | '/services/$category/$sub/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
   ClientsRoute: typeof ClientsRoute
   ContactRoute: typeof ContactRoute
+  LoginRoute: typeof LoginRoute
   NewsRoute: typeof NewsRoute
   PortfolioRoute: typeof PortfolioRoute
   ReviewsRoute: typeof ReviewsRoute
@@ -196,6 +277,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/news': {
       id: '/news'
       path: '/news'
@@ -224,22 +312,102 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServicesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/services/$slug': {
-      id: '/services/$slug'
-      path: '/$slug'
-      fullPath: '/services/$slug'
-      preLoaderRoute: typeof ServicesSlugRouteImport
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/services/': {
+      id: '/services/'
+      path: '/'
+      fullPath: '/services/'
+      preLoaderRoute: typeof ServicesIndexRouteImport
       parentRoute: typeof ServicesRoute
+    }
+    '/services/$category': {
+      id: '/services/$category'
+      path: '/$category'
+      fullPath: '/services/$category'
+      preLoaderRoute: typeof ServicesCategoryRouteImport
+      parentRoute: typeof ServicesRoute
+    }
+    '/services/$category/': {
+      id: '/services/$category/'
+      path: '/'
+      fullPath: '/services/$category/'
+      preLoaderRoute: typeof ServicesCategoryIndexRouteImport
+      parentRoute: typeof ServicesCategoryRoute
+    }
+    '/services/$category/$sub': {
+      id: '/services/$category/$sub'
+      path: '/$sub'
+      fullPath: '/services/$category/$sub'
+      preLoaderRoute: typeof ServicesCategorySubRouteImport
+      parentRoute: typeof ServicesCategoryRoute
+    }
+    '/services/$category/$sub/': {
+      id: '/services/$category/$sub/'
+      path: '/'
+      fullPath: '/services/$category/$sub/'
+      preLoaderRoute: typeof ServicesCategorySubIndexRouteImport
+      parentRoute: typeof ServicesCategorySubRoute
+    }
+    '/services/$category/$sub/$service': {
+      id: '/services/$category/$sub/$service'
+      path: '/$service'
+      fullPath: '/services/$category/$sub/$service'
+      preLoaderRoute: typeof ServicesCategorySubServiceRouteImport
+      parentRoute: typeof ServicesCategorySubRoute
     }
   }
 }
 
+interface AdminRouteChildren {
+  AdminLoginRoute: typeof AdminLoginRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminLoginRoute: AdminLoginRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
+interface ServicesCategorySubRouteChildren {
+  ServicesCategorySubServiceRoute: typeof ServicesCategorySubServiceRoute
+  ServicesCategorySubIndexRoute: typeof ServicesCategorySubIndexRoute
+}
+
+const ServicesCategorySubRouteChildren: ServicesCategorySubRouteChildren = {
+  ServicesCategorySubServiceRoute: ServicesCategorySubServiceRoute,
+  ServicesCategorySubIndexRoute: ServicesCategorySubIndexRoute,
+}
+
+const ServicesCategorySubRouteWithChildren =
+  ServicesCategorySubRoute._addFileChildren(ServicesCategorySubRouteChildren)
+
+interface ServicesCategoryRouteChildren {
+  ServicesCategorySubRoute: typeof ServicesCategorySubRouteWithChildren
+  ServicesCategoryIndexRoute: typeof ServicesCategoryIndexRoute
+}
+
+const ServicesCategoryRouteChildren: ServicesCategoryRouteChildren = {
+  ServicesCategorySubRoute: ServicesCategorySubRouteWithChildren,
+  ServicesCategoryIndexRoute: ServicesCategoryIndexRoute,
+}
+
+const ServicesCategoryRouteWithChildren =
+  ServicesCategoryRoute._addFileChildren(ServicesCategoryRouteChildren)
+
 interface ServicesRouteChildren {
-  ServicesSlugRoute: typeof ServicesSlugRoute
+  ServicesCategoryRoute: typeof ServicesCategoryRouteWithChildren
+  ServicesIndexRoute: typeof ServicesIndexRoute
 }
 
 const ServicesRouteChildren: ServicesRouteChildren = {
-  ServicesSlugRoute: ServicesSlugRoute,
+  ServicesCategoryRoute: ServicesCategoryRouteWithChildren,
+  ServicesIndexRoute: ServicesIndexRoute,
 }
 
 const ServicesRouteWithChildren = ServicesRoute._addFileChildren(
@@ -249,9 +417,10 @@ const ServicesRouteWithChildren = ServicesRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
   ClientsRoute: ClientsRoute,
   ContactRoute: ContactRoute,
+  LoginRoute: LoginRoute,
   NewsRoute: NewsRoute,
   PortfolioRoute: PortfolioRoute,
   ReviewsRoute: ReviewsRoute,

@@ -18,10 +18,10 @@ export function NewsCard({ post }: { post: NewsPost }) {
       ) : null}
       <div className="p-6">
         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-          <span className="glass-soft rounded-full px-3 py-1 font-medium text-foreground">{post.tag}</span>
+          <span className="glass-soft rounded-full px-3 py-1 font-medium text-foreground">{post.category}</span>
           <span className="inline-flex items-center gap-1.5">
             <CalendarDays className="size-3.5" />
-            {new Date(post.date).toLocaleDateString("en-GB", {
+            {new Date(post.publishedAt).toLocaleDateString("en-GB", {
               day: "numeric",
               month: "long",
               year: "numeric",

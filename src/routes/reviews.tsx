@@ -24,8 +24,8 @@ export const Route = createFileRoute("/reviews")({
 });
 
 function ReviewsPage() {
-  const { content } = useSiteContent();
-  const approved = content.reviews.filter((review) => review.status === "approved");
+  const { reviews } = useSiteContent();
+  const approved = reviews.filter((review) => review.status === "approved");
   const average = approved.length
     ? (approved.reduce((sum, review) => sum + review.rating, 0) / approved.length).toFixed(1)
     : "—";

@@ -1,22 +1,27 @@
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
 import { useRouterState } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { useLayoutEffect, type ReactNode } from "react";
 
-/** Cinematic fade + slide between routes (~0.5s). */
+/**
+ * Lightweight route transition: the new page renders immediately (no exit
+ * wait, so clicks feel instant) and always starts at the top.
+ */
 export function PageTransition({ children }: { children: ReactNode }) {
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+  }, [pathname]);
 
   return (
-    <AnimatePresence mode="wait" initial={false}>
-      <motion.main
-        key={pathname}
-        initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
-        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-        exit={{ opacity: 0, y: -18, filter: "blur(6px)" }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      >
-        {children}
-      </motion.main>
-    </AnimatePresence>
+    <motion.main
+      key={pathname}
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.12, ease: [0.22, 1, 0.36, 1] }}
+      className="relative w-full min-w-0"
+    >
+      {children}
+    </motion.main>
   );
 }

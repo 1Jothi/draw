@@ -196,3 +196,21 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Authentication and Admin Setup
+
+`/login` uses Supabase Auth for regular user accounts. `/admin/login` uses the same authentication service, then checks the user's `user_roles` row. Content writes, review moderation, leads, and media access are also protected by database row-level security.
+
+Apply the Drizzle migrations in order. `0002_harden_roles.sql` removes first-user admin self-promotion, assigns new accounts the `user` role, and constrains the public media bucket. Set `LOVABLE_DB_MIGRATION_URL` in your local shell before running `npx drizzle-kit migrate`; do not expose a database or service-role key through a `VITE_` variable.
+
+To provision an administrator, create and verify the account with Supabase Auth (or `/login`), then grant the role from the Supabase SQL editor using that account's email:
+
+```sql
+insert into public.user_roles (user_id, role)
+select id, 'admin'::public.app_role
+from auth.users
+where email = 'admin@example.com'
+on conflict (user_id, role) do nothing;
+```
+
+Admin roles are intentionally not assignable from the browser. Ordinary sign-ups receive only the `user` role.

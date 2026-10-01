@@ -7,20 +7,21 @@ import { FounderSection } from "@/components/sections/FounderSection";
 import { Testimonials } from "@/components/sections/Testimonials";
 import { Section, SectionHeading } from "@/components/ui-kit/Section";
 import { Stagger } from "@/components/motion/Reveal";
-import { ServiceCard } from "@/components/cards/ServiceCard";
+import { CategoryLink, HierarchyCard } from "@/components/cards/ServiceCard";
+import { POWER_TAGLINE, SLOGAN } from "@/data/content";
 import { NewsCard } from "@/components/cards/NewsCard";
 import { useSiteContent } from "@/store/site-content";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Drawvax Infotech — Client Satisfaction is Our Signature" },
+      { title: "Drawvax Infotech — Client Satisfaction. Company Satisfaction." },
       {
         name: "description",
         content:
-          "Front-end development, UI/UX design, SEO and digital marketing from Drawvax Infotech. Premium, fast, animated digital experiences.",
+          "Websites, apps, digital marketing, branding and manpower support from Drawvax Infotech — 5+ years, 130 projects, clients in India and Kuwait.",
       },
-      { property: "og:title", content: "Drawvax Infotech — Client Satisfaction is Our Signature" },
+      { property: "og:title", content: "Drawvax Infotech — Client Satisfaction. Company Satisfaction." },
       {
         property: "og:description",
         content: "A front-end engineering and digital growth studio building interfaces that convert.",
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
-  const { content } = useSiteContent();
+  const { content, news, loading } = useSiteContent();
 
   return (
     <>
@@ -47,11 +48,19 @@ function Home() {
               Services built to make you <span className="gradient-text">unmissable</span>
             </>
           }
-          subtitle="Strategy, design, engineering and growth under one roof — so nothing gets lost between teams."
+          subtitle="Technical services, marketing & creative, and manpower support — all under one roof."
         />
         <Stagger className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {content.services.map((service) => (
-            <ServiceCard key={service.id} service={service} />
+          {content.services.map((category) => (
+            <HierarchyCard
+              key={category.id}
+              icon={category.icon}
+              title={category.title}
+              text={category.short}
+              meta={`${category.subcategories.length} sub-categories`}
+              animatedIcon
+              link={<CategoryLink slug={category.slug}>Explore</CategoryLink>}
+            />
           ))}
         </Stagger>
       </Section>
@@ -68,10 +77,15 @@ function Home() {
           }
         />
         <Stagger className="mt-12 grid gap-5 md:grid-cols-2">
-          {content.news.slice(0, 2).map((post) => (
+          {news.slice(0, 2).map((post) => (
             <NewsCard key={post.id} post={post} />
           ))}
         </Stagger>
+        {!loading && news.length === 0 ? (
+          <p className="glass-soft mx-auto mt-6 max-w-lg rounded-2xl px-5 py-6 text-center text-sm text-muted-foreground">
+            Fresh updates from the studio are coming soon.
+          </p>
+        ) : null}
         <div className="mt-8 text-center">
           <Link to="/news" className="glass inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold">
             All updates <ArrowRight className="size-4 text-primary" />
@@ -94,12 +108,10 @@ function Home() {
           />
           <div className="relative">
             <h2 className="font-display text-3xl font-bold text-balance sm:text-5xl">
-              Let's build something your users remember
+              {content.settings.ctaHeadline}
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-              Tell us about your project and we'll come back with a plan, a timeline and a fixed quote
-              within two business days.
-            </p>
+            <p className="mx-auto mt-4 max-w-xl text-muted-foreground">{content.settings.ctaText}</p>
+            <p className="mx-auto mt-5 max-w-xl font-display text-base font-semibold sm:text-lg">{POWER_TAGLINE}</p>
             <motion.div whileHover={{ scale: 1.05 }} className="mt-8 inline-block">
               <Link
                 to="/contact"
@@ -108,6 +120,7 @@ function Home() {
                 Get a Free Quote <ArrowRight className="size-4" />
               </Link>
             </motion.div>
+            <p className="mt-6 font-display text-lg font-semibold gradient-text sm:text-xl">{SLOGAN}</p>
           </div>
         </motion.div>
       </Section>

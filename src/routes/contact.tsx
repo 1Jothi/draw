@@ -26,7 +26,7 @@ export const Route = createFileRoute("/contact")({
 });
 
 function ContactPage() {
-  const { content, addLead } = useSiteContent();
+  const { content } = useSiteContent();
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -38,9 +38,19 @@ function ContactPage() {
       return;
     }
     setBusy(true);
-    // TODO: connect to backend — POST the contact enquiry and trigger a notification email
-    const lead = await api.submitContact(form);
-    addLead(lead);
+    try {
+      await api.submitLead({
+        source: "Contact form",
+        name: form.name.trim().slice(0, 120),
+        email: form.email.trim().slice(0, 255),
+        phone: form.phone.trim().slice(0, 40),
+        message: form.message.trim().slice(0, 3000),
+      });
+    } catch {
+      setBusy(false);
+      toast.error("Couldn't send your message. Please try again.");
+      return;
+    }
     setBusy(false);
     setSent(true);
     setForm({ name: "", email: "", phone: "", message: "" });
@@ -138,7 +148,10 @@ function ContactPage() {
               </div>
 
               <div className="glass flex flex-wrap gap-2 rounded-3xl p-5">
-                {content.contact.socials.map((social) => (
+                {[
+                  { label: "LinkedIn", url: content.contact.linkedin },
+                  { label: "Instagram", url: content.contact.instagram },
+                ].filter((s) => s.url).map((social) => (
                   <motion.a
                     key={social.label}
                     href={social.url}

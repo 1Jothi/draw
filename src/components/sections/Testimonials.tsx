@@ -5,12 +5,12 @@ import { toast } from "sonner";
 import { Section, SectionHeading } from "@/components/ui-kit/Section";
 import { ReviewCard, Stars } from "@/components/cards/ReviewCard";
 import { Reveal } from "@/components/motion/Reveal";
-import { useSiteContent } from "@/store/site-content";
+import { approvedReviews, useSiteContent } from "@/store/site-content";
 import { api } from "@/data/api";
 
 export function Testimonials({ withForm = true }: { withForm?: boolean }) {
-  const { content, addReview } = useSiteContent();
-  const approved = content.reviews.filter((review) => review.status === "approved");
+  const { reviews, loading } = useSiteContent();
+  const approved = approvedReviews(reviews);
   const [index, setIndex] = useState(0);
   const [form, setForm] = useState({ name: "", company: "", rating: 5, comment: "" });
   const [submitted, setSubmitted] = useState(false);
@@ -29,9 +29,17 @@ export function Testimonials({ withForm = true }: { withForm?: boolean }) {
       toast.error("Add your name and a comment of at least 10 characters.");
       return;
     }
-    // TODO: connect to backend — new reviews should be stored as "pending" for moderation
-    const review = await api.submitReview(form);
-    addReview(review);
+    try {
+      await api.submitReview({
+        name: form.name.trim().slice(0, 100),
+        company: form.company.trim().slice(0, 150),
+        rating: form.rating,
+        comment: form.comment.trim().slice(0, 1000),
+      });
+    } catch {
+      toast.error("Couldn't send your review. Please try again.");
+      return;
+    }
     setSubmitted(true);
     setForm({ name: "", company: "", rating: 5, comment: "" });
     toast.success("Thank you! Your review is pending approval.");
@@ -47,11 +55,11 @@ export function Testimonials({ withForm = true }: { withForm?: boolean }) {
             What our clients say about <span className="gradient-text">working with us</span>
           </>
         }
-        subtitle="Real feedback from the teams we build with. Every project ends with the same question: are you genuinely satisfied?"
+        subtitle="Real feedback from businesses in India and Kuwait. Every project ends with the same question: are you genuinely satisfied?"
       />
 
-      <div className="mt-12 grid gap-8 lg:grid-cols-[1.2fr_1fr]">
-        <div className="relative min-h-[18rem]">
+      <div className="mt-12 grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+        <div className="relative min-h-[18rem] min-w-0">
           <AnimatePresence mode="wait">
             {current ? (
               <motion.div
@@ -63,6 +71,8 @@ export function Testimonials({ withForm = true }: { withForm?: boolean }) {
               >
                 <ReviewCard review={current} />
               </motion.div>
+            ) : loading ? (
+              <div className="glass h-64 animate-pulse rounded-3xl" />
             ) : null}
           </AnimatePresence>
           <div className="mt-5 flex items-center gap-3">
@@ -82,18 +92,11 @@ export function Testimonials({ withForm = true }: { withForm?: boolean }) {
             >
               <ChevronRight className="size-4" />
             </button>
-            <div className="ml-2 flex gap-1.5">
-              {approved.map((review, dotIndex) => (
-                <span
-                  key={review.id}
-                  className={
-                    dotIndex === index
-                      ? "gradient-accent h-1.5 w-6 rounded-full"
-                      : "h-1.5 w-1.5 rounded-full bg-muted-foreground/40"
-                  }
-                />
-              ))}
-            </div>
+            {approved.length ? (
+              <span className="ml-2 text-xs text-muted-foreground tabular-nums">
+                {(index % approved.length) + 1} / {approved.length}
+              </span>
+            ) : null}
           </div>
         </div>
 

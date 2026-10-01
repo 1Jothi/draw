@@ -1,9 +1,10 @@
 import { AnimatePresence, motion } from "motion/react";
 import { Link } from "@tanstack/react-router";
-import { Bell, Menu, X } from "lucide-react";
+import { Bell, LogIn, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSiteContent } from "@/store/site-content";
 import { cn } from "@/lib/utils";
+import { SLOGAN } from "@/data/content";
 
 const links = [
   { to: "/", label: "Home" },
@@ -17,11 +18,11 @@ const links = [
 ] as const;
 
 export function Navbar() {
-  const { content } = useSiteContent();
+  const { content, news } = useSiteContent();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [toast, setToast] = useState(false);
-  const latest = content.news[0];
+  const latest = news[0];
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -30,16 +31,17 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Latest-update toast, once per browser session.
+  // Latest-update popup: shown for each new post, dismissible per session.
   useEffect(() => {
-    if (sessionStorage.getItem("drawvax.newsToast") === "seen") return;
-    const timer = setTimeout(() => setToast(true), 3500);
+    if (!latest) return;
+    if (sessionStorage.getItem("drawvax.newsToast") === latest.id) return;
+    const timer = setTimeout(() => setToast(true), 3000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [latest]);
 
   const dismissToast = () => {
     setToast(false);
-    sessionStorage.setItem("drawvax.newsToast", "seen");
+    if (latest) sessionStorage.setItem("drawvax.newsToast", latest.id);
   };
 
   return (
@@ -55,24 +57,24 @@ export function Navbar() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           className={cn(
-            "flex items-center justify-between rounded-2xl px-4 py-3 transition-all duration-500",
+            "flex items-center justify-between gap-3 rounded-2xl px-3 py-3 sm:px-4 transition-all duration-500",
             scrolled ? "glass" : "border border-transparent",
           )}
         >
-          <Link to="/" className="group flex items-center gap-3" onClick={() => setOpen(false)}>
+          <Link to="/" className="group flex min-w-0 items-center gap-3" onClick={() => setOpen(false)}>
             <motion.span
               whileHover={{ rotate: 12, scale: 1.08 }}
-              className="gradient-accent grid size-10 place-items-center rounded-xl font-display text-lg font-bold text-primary-foreground"
+              className="gradient-accent grid size-10 shrink-0 place-items-center rounded-xl font-display text-lg font-bold text-primary-foreground"
             >
               D
             </motion.span>
-            <span className="leading-tight">
+            <span className="min-w-0 leading-tight">
               <span className="block font-display text-base font-bold tracking-tight sm:text-lg">
                 {content.settings.companyName}
               </span>
               {/* Mandatory slogan — always contains "Client Satisfaction" */}
-              <span className="hidden text-[11px] tracking-wide text-muted-foreground sm:block">
-                {content.settings.slogan}
+              <span className="hidden text-[11px] font-medium tracking-wide gradient-text sm:block">
+                {SLOGAN}
               </span>
             </span>
           </Link>
@@ -92,18 +94,27 @@ export function Navbar() {
             ))}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
+            <Link
+              to="/login"
+              aria-label="Sign in"
+              title="Sign in"
+              className="glass-soft inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm font-medium text-foreground"
+            >
+              <LogIn className="size-4" />
+              <span className="hidden sm:inline">Sign in</span>
+            </Link>
             <Link
               to="/news"
               aria-label="News and updates"
               className="glass-soft relative grid size-10 place-items-center rounded-xl text-foreground"
             >
               <Bell className="size-4.5" />
-              <motion.span
+              {latest ? <motion.span
                 className="absolute top-2 right-2 size-2 rounded-full bg-accent"
                 animate={{ scale: [1, 1.5, 1], opacity: [1, 0.6, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
-              />
+              /> : null}
             </Link>
             <Link
               to="/contact"
@@ -132,6 +143,19 @@ export function Navbar() {
               className="glass mt-2 overflow-hidden rounded-2xl lg:hidden"
             >
               <div className="flex flex-col p-3">
+                <motion.div
+                  initial={{ opacity: 0, x: 24 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.05 }}
+                >
+                  <Link
+                    to="/login"
+                    onClick={() => setOpen(false)}
+                    className="block rounded-xl px-4 py-3 text-sm font-semibold text-primary hover:bg-secondary"
+                  >
+                    Sign in
+                  </Link>
+                </motion.div>
                 {links.map((link, index) => (
                   <motion.div
                     key={link.to}

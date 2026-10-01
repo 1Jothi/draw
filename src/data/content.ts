@@ -1,27 +1,40 @@
 /**
- * Drawvax Infotech — content / data layer.
+ * Drawvax Infotech — content types + default content.
  *
- * This file holds ALL site content as typed mock data. It is intentionally the
- * single source of truth for the front end so a backend developer can later
- * replace `src/data/api.ts` with real network calls (Node, Supabase, Firebase,
- * Django, ...) without touching any component.
+ * Editable sections (settings, founder, contact, services, portfolio, clients)
+ * live in the `site_content` table as JSON. Anything the admin has not saved
+ * yet falls back to the defaults below. Reviews, news and leads live in their
+ * own tables (see src/data/api.ts).
  */
-
 import founderPhoto from "@/assets/founder.jpg";
 import work1 from "@/assets/work-1.jpg";
 import work2 from "@/assets/work-2.jpg";
 
+/** Locked slogan — never altered or removed. */
+export const SLOGAN = "Client Satisfaction. Company Satisfaction.";
+export const POWER_TAGLINE = "Impossible Make Possible — That's the Power of Drawvax Infotech.";
+
 /* ---------------------------------- types --------------------------------- */
+
+export type Stat = { label: string; value: number; suffix: string };
+export type ProcessStep = { step: string; label: string; title: string; text: string };
 
 export type SiteSettings = {
   companyName: string;
-  /** MUST always contain the exact phrase "Client Satisfaction". */
-  slogan: string;
-  heroHeadlineWords: string[];
+  heroEyebrow: string;
+  heroHeadline: string;
   heroSubheading: string;
+  heroButtonText: string;
+  heroButtonLink: string;
   aboutTitle: string;
   aboutBody: string;
-  stats: { label: string; value: number; suffix: string }[];
+  yearsExperience: number;
+  projectsCompleted: number;
+  ongoingProjects: string;
+  teamBreakdown: { label: string; count: string }[];
+  teamTotal: number;
+  ctaHeadline: string;
+  ctaText: string;
 };
 
 export type Founder = {
@@ -29,45 +42,82 @@ export type Founder = {
   title: string;
   photo: string;
   bio: string;
+  highlight: string;
   quote: string;
   linkedin: string;
   email: string;
+  phone: string;
+  website: string;
+  credit: string;
 };
 
-export type Service = {
+export type ServiceItem = {
+  id: string;
+  slug: string;
+  title: string;
+  short: string;
+  description: string;
+  media: string;
+  features: string[];
+};
+
+export type SubCategory = {
+  id: string;
+  slug: string;
+  title: string;
+  short: string;
+  services: ServiceItem[];
+};
+
+export type ServiceCategory = {
   id: string;
   slug: string;
   title: string;
   icon: string;
   short: string;
-  description: string;
   media: string;
-  features: string[];
-  benefits: string[];
-  priceFrom: string;
+  subcategories: SubCategory[];
 };
 
 export type PortfolioItem = {
   id: string;
   title: string;
   client: string;
-  category: "Web" | "Marketing" | "SEO" | "Branding";
+  category: string;
   image: string;
-  /** Short looping preview played on hover (optional). */
-  video?: string;
+  video: string;
+  gallery: string[];
   description: string;
   tech: string[];
   year: string;
+  url?: string;
+  published?: boolean;
+  sortOrder?: number;
 };
 
 export type Client = {
   id: string;
   name: string;
   industry: string;
-  logoText: string;
+  region: "domestic" | "international";
+  logo: string;
   details: string;
   collaboration: string;
   since: string;
+  website?: string;
+  enabled?: boolean;
+  sortOrder?: number;
+};
+
+export type ContactDetails = {
+  legalName: string;
+  address: string;
+  phone: string;
+  email: string;
+  hours: string;
+  mapQuery: string;
+  linkedin: string;
+  instagram: string;
 };
 
 export type Review = {
@@ -76,588 +126,421 @@ export type Review = {
   company: string;
   rating: number;
   comment: string;
-  avatar: string;
-  status: "approved" | "pending";
-  date: string;
+  fullStory: string;
+  status: "pending" | "approved" | "rejected";
+  createdAt: string;
+  avatar?: string;
+  companyLogo?: string;
+  sortOrder?: number;
 };
 
 export type NewsPost = {
   id: string;
   title: string;
-  date: string;
   excerpt: string;
   body: string;
-  tag: string;
-  image?: string;
-};
-
-export type ContactDetails = {
-  address: string;
-  phone: string;
-  email: string;
-  hours: string;
-  mapQuery: string;
-  socials: { label: string; url: string }[];
+  category: string;
+  image: string;
+  publishedAt: string;
 };
 
 export type Lead = {
   id: string;
-  source: "Contact form" | "Chatbot" | "Newsletter";
+  source: "Contact form" | "Chatbot";
   name: string;
   email: string;
+  phone: string;
   message: string;
-  date: string;
+  createdAt: string;
 };
 
-export type SiteContent = {
+export type CmsContent = {
   settings: SiteSettings;
   founder: Founder;
-  services: Service[];
+  contact: ContactDetails;
+  process: ProcessStep[];
+  services: ServiceCategory[];
   portfolio: PortfolioItem[];
   clients: Client[];
-  reviews: Review[];
-  news: NewsPost[];
-  contact: ContactDetails;
-  leads: Lead[];
 };
 
-/* --------------------------------- content -------------------------------- */
+export type CmsKey = keyof CmsContent;
 
-export const SLOGAN_REQUIRED_PHRASE = "Client Satisfaction";
+/* -------------------------------- helpers --------------------------------- */
+
+export const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
+export const newId = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
+
+const clientLogoAssets: Record<string, string> = {
+  "azil-healthcare.png": "/clients/azil-healthcare.png",
+  "5g-mobiles.png": "/clients/5g-mobiles.png",
+  "royal-mobiles.png": "/clients/royal-mobiles.png",
+  "hydraulic-operation-training-institute.png": "/clients/hydraulic-operation-training-institute.png",
+  "bangalore-defence-academy.png": "/clients/bangalore-defence-academy.png",
+  "banjos-beverages.png": "/clients/banjos-beverages.png",
+  "sri-sakthi-computers.png": "/clients/sri-sakthi-computers.png",
+  "sri-hari-properties.png": "/clients/sri-hari-properties.png",
+  "super-cakes.png": "/clients/super-cakes.png",
+};
+
+export function getClientLogoUrl(url: string): string {
+  if (!url.includes("/__l5e/assets-v1/")) return url;
+  const filename = url.split(/[?#]/, 1)[0]?.split("/").pop();
+  return filename ? clientLogoAssets[filename] ?? url : url;
+}
+
+function svc(title: string, area: string): ServiceItem {
+  return {
+    id: `s-${slugify(area)}-${slugify(title)}`,
+    slug: slugify(title),
+    title,
+    short: `${title} delivered by the Drawvax ${area} team — planned around your goals and budget.`,
+    description: `We start by understanding your business and requirements, then plan, build and deliver ${title.toLowerCase()} with a focus on quality, value and long-term support.`,
+    media: "",
+    features: [
+      "Requirement discussion & clear scope",
+      "Budget-friendly, transparent pricing",
+      "Quality delivery with review before launch",
+      "Ongoing support after handover",
+    ],
+  };
+}
+
+function sub(title: string, short: string, items: string[]): SubCategory {
+  return {
+    id: `sc-${slugify(title)}`,
+    slug: slugify(title),
+    title,
+    short,
+    services: items.map((item) => svc(item, title)),
+  };
+}
+
+/* --------------------------------- defaults ------------------------------- */
 
 const settings: SiteSettings = {
   companyName: "Drawvax Infotech",
-  slogan: "Client Satisfaction is Our Signature",
-  heroHeadlineWords: ["We", "craft", "digital", "experiences", "that", "move", "people."],
+  heroEyebrow: "Front-end development & digital growth",
+  heroHeadline: "We craft digital experiences that move people.",
   heroSubheading:
-    "Drawvax Infotech is a front-end engineering and digital growth studio. We design, build and scale interfaces that load fast, convert better and feel unmistakably premium.",
-  aboutTitle: "A studio built around one obsession",
+    "Drawvax Infotech is a front-end engineering & digital growth studio — websites, apps, marketing and branding built around your requirements and your budget.",
+  heroButtonText: "View Our Work",
+  heroButtonLink: "/portfolio",
+  aboutTitle: "A studio built on listening first",
   aboutBody:
-    "Founded to close the gap between beautiful design and engineering that actually performs, Drawvax Infotech partners with founders, brands and enterprises to ship products people enjoy using. Our team blends front-end craftsmanship, motion design, SEO and performance marketing under one roof — so strategy, pixels and code never drift apart. Every engagement runs on transparent communication, measurable outcomes and a simple promise: we are not finished until you are genuinely satisfied.",
-  stats: [
-    { label: "Years of experience", value: 8, suffix: "+" },
-    { label: "Projects completed", value: 240, suffix: "+" },
-    { label: "Happy clients", value: 130, suffix: "+" },
-    { label: "Team members", value: 32, suffix: "" },
+    "For more than five years we've helped shops, academies, clinics, builders and trading companies in India and Kuwait grow online. We understand each client's requirements, work according to their budget, and deliver the best possible quality — then stay on to support them.",
+  yearsExperience: 5,
+  projectsCompleted: 130,
+  ongoingProjects: "5–10",
+  teamTotal: 177,
+  teamBreakdown: [
+    { label: "Managers", count: "5" },
+    { label: "Team Managers", count: "7" },
+    { label: "Team Leaders", count: "15" },
+    { label: "Staff", count: "150" },
   ],
+  ctaHeadline: "Let's build something your users remember",
+  ctaText:
+    "Tell us about your project. We'll schedule a meeting, understand your requirements and come back with a practical plan that fits your budget.",
 };
 
 const founder: Founder = {
-  name: "Santhosh",
-  title: "Founder & CEO, Drawvax Infotech",
+  name: "Murugu Santhosh RS",
+  title: "Founder & CEO, Drawvax infotech & Digital",
   photo: founderPhoto,
-  bio: "Santhosh started Drawvax Infotech with a simple conviction: technology should feel effortless to the people who use it, and honest to the people who pay for it. Over the last decade he has led front-end and growth teams across fintech, retail and SaaS, shipping products used by millions. He still personally reviews every engagement to make sure the work leaving the studio meets the standard our clients were promised.",
+  bio: "I’m an MCA graduate with 5+ years of experience in website development and digital solutions. My approach has always been simple — understand each client’s requirements, work according to their budget, and deliver the best possible quality.\n\nMy main motive is “Client satisfaction and company satisfaction”, not just the amount involved. I believe in supporting businesses, especially those facing challenges, by helping them grow through practical and affordable digital solutions.\n\nFor any questions or verification, my official website, professional links and contact details are provided below, and you can contact me directly.",
+  highlight: "Client satisfaction and company satisfaction",
   quote: "Client satisfaction isn't a goal, it's our standard.",
-  linkedin: "https://www.linkedin.com/",
-  email: "santhosh@drawvax.com",
+  linkedin: "https://www.linkedin.com/in/murugu-santhosh-193057365/",
+  email: "drawvaxinfotech.off@gmail.com",
+  phone: "+91 6374025393",
+  website: "https://drawvax-effect.lovable.app",
+  credit: "This website was personally built and managed under his direction.",
 };
 
-const services: Service[] = [
+const contact: ContactDetails = {
+  legalName: "Drawvax Infotech and Digital",
+  address: "Ponnamaravathy, Pudukottai District, Tamil Nadu, PIN: 622407",
+  phone: "+91 6374025393",
+  email: "drawvaxinfotech.off@gmail.com",
+  hours: "Monday – Saturday, 9:30am – 6:30pm IST",
+  mapQuery: "Ponnamaravathy, Pudukottai, Tamil Nadu 622407",
+  linkedin: "https://www.linkedin.com/in/murugu-santhosh-193057365/",
+  instagram: "",
+};
+
+const services: ServiceCategory[] = [
   {
-    id: "s1",
-    slug: "web-development",
-    title: "Web Development",
+    id: "cat-technical",
+    slug: "technical-services",
+    title: "Technical Services",
     icon: "Code2",
-    short: "Blazing-fast, accessible websites and web apps engineered in React.",
-    description:
-      "From marketing sites to complex dashboards, we build production-grade front ends with React, TypeScript and modern tooling. Component-driven, fully responsive, and tuned for Core Web Vitals from day one.",
-    media: work1,
-    features: [
-      "React + TypeScript component architecture",
-      "Pixel-accurate responsive implementation",
-      "Core Web Vitals & Lighthouse optimisation",
-      "CMS / headless backend integration ready",
-      "Accessibility (WCAG AA) baked in",
+    short: "Websites, software, apps, cloud and UI/UX — engineered to be fast, secure and easy to use.",
+    media: "",
+    subcategories: [
+      sub("Website & Web Development", "Websites and web apps that load fast and convert.", [
+        "Business Website", "E-commerce Website", "Portfolio Website", "Landing Page", "CMS / WordPress Development", "Web App Development",
+      ]),
+      sub("Software Development", "Custom software that fits the way you work.", [
+        "Custom Software", "CRM / ERP", "Inventory Management", "Booking Systems",
+      ]),
+      sub("Mobile & App Development", "Android, iOS and cross-platform apps.", [
+        "Android / iOS App Development", "Cross-Platform App Development", "App Maintenance",
+      ]),
+      sub("Cloud, Hosting & Infrastructure", "Reliable domains, hosting and servers.", [
+        "Domain Registration", "Hosting Setup", "Server Management", "SSL", "Backup & Recovery",
+      ]),
+      sub("UI/UX & Technical Solutions", "Interfaces people understand at a glance.", [
+        "UI Design", "UX Research", "Wireframing", "Prototyping", "Admin Dashboard Design",
+      ]),
     ],
-    benefits: [
-      "Pages that load in under a second",
-      "A codebase your future team can extend",
-      "Higher conversion from faster experiences",
-    ],
-    priceFrom: "$2,400",
   },
   {
-    id: "s2",
-    slug: "ui-ux-design",
-    title: "UI/UX Design",
-    icon: "PenTool",
-    short: "Interface design and motion systems that make products feel premium.",
-    description:
-      "We design end-to-end: research, flows, wireframes, high-fidelity UI and a motion language that ties it together. Every screen ships with a documented design system your developers can build from.",
-    media: work2,
-    features: [
-      "User research & journey mapping",
-      "Design systems in Figma",
-      "Interactive prototypes",
-      "Motion & micro-interaction specs",
-      "Design QA through to launch",
-    ],
-    benefits: [
-      "Fewer revisions, faster builds",
-      "A consistent brand across every screen",
-      "Interfaces users instinctively understand",
-    ],
-    priceFrom: "$1,800",
-  },
-  {
-    id: "s3",
-    slug: "digital-marketing",
-    title: "Digital Marketing",
+    id: "cat-non-technical",
+    slug: "non-technical-services",
+    title: "Non-Technical Services",
     icon: "Megaphone",
-    short: "Performance campaigns that turn attention into pipeline.",
-    description:
-      "Paid social, search and lifecycle marketing run by a team that reads the analytics daily. We build the funnel, the creative and the reporting, then optimise relentlessly against your cost per acquisition.",
-    media: work1,
-    features: [
-      "Google, Meta & LinkedIn ad management",
-      "Landing page + funnel design",
-      "Creative production and A/B testing",
-      "Attribution and dashboard reporting",
-      "Email & lifecycle automation",
+    short: "Marketing, SEO, social media, branding and content that bring real enquiries.",
+    media: "",
+    subcategories: [
+      sub("Digital Marketing & SEO", "Be found by the customers already searching for you.", [
+        "Digital Marketing Strategy", "SEO", "Local SEO", "Keyword Research", "Google Ads",
+      ]),
+      sub("Social Media Marketing", "Campaigns and communities that grow your brand.", [
+        "Social Media Strategy", "Facebook / Instagram / LinkedIn Ads", "Community Management",
+      ]),
+      sub("Branding & Creative", "A professional identity across every touchpoint.", [
+        "Logo Design", "Brand Guidelines", "Letterhead", "Business Cards", "Poster / Flyer Design",
+      ]),
+      sub("Content & Media", "Words, videos and motion that tell your story.", [
+        "Content Writing", "Blog Writing", "Video Editing", "Reels / Shorts", "Motion Graphics",
+      ]),
+      sub("Business Growth & Marketing Support", "Systems that keep new leads coming.", [
+        "Lead Generation", "Email Marketing", "WhatsApp Marketing", "Marketing Automation",
+      ]),
     ],
-    benefits: ["Lower cost per qualified lead", "Clear ROI reporting", "Campaigns that compound"],
-    priceFrom: "$1,200/mo",
   },
   {
-    id: "s4",
-    slug: "seo",
-    title: "SEO",
-    icon: "Search",
-    short: "Technical and content SEO that earns durable organic traffic.",
-    description:
-      "We audit, fix and grow. Technical SEO, structured data, internal linking and a content engine built around the queries your customers actually search for.",
-    media: work2,
-    features: [
-      "Technical audit & Core Web Vitals fixes",
-      "Keyword and SERP opportunity research",
-      "On-page and schema optimisation",
-      "Authority and link strategy",
-      "Monthly ranking reports",
+    id: "cat-manpower",
+    slug: "manpower-and-business-support",
+    title: "Manpower & Business Support",
+    icon: "Users",
+    short: "Skilled professionals and dependable support staff for your business.",
+    media: "",
+    subcategories: [
+      sub("Skilled Manpower — IT & Technical Professionals", "Vetted technical talent.", [
+        "Developers", "Designers", "QA Engineers", "DevOps Engineers",
+      ]),
+      sub("Business & Professional Support", "Office professionals who keep work moving.", [
+        "HR Executive", "Recruiter", "Accountant", "Admin Officer", "Customer Support", "Sales",
+      ]),
+      sub("Security & Facility Support", "Safe, clean and well-kept premises.", [
+        "Security Guard", "Housekeeping", "Watchman",
+      ]),
+      sub("General & Office Support", "Reliable everyday support staff.", [
+        "Office Assistant", "Driver", "Delivery Staff", "Domestic Help",
+      ]),
     ],
-    benefits: ["Traffic that doesn't stop when ads stop", "Higher intent visitors", "Compounding growth"],
-    priceFrom: "$900/mo",
-  },
-  {
-    id: "s5",
-    slug: "app-development",
-    title: "App Development",
-    icon: "Smartphone",
-    short: "Cross-platform mobile apps with native-grade feel.",
-    description:
-      "React Native and PWA builds that share one codebase across iOS, Android and web — with offline support, push notifications and animation quality users notice.",
-    media: work1,
-    features: [
-      "React Native / PWA builds",
-      "Offline-first data strategy",
-      "Push notifications & deep links",
-      "App Store & Play Store release support",
-      "Crash and performance monitoring",
-    ],
-    benefits: ["One codebase, every platform", "Faster time to market", "Lower long-term maintenance"],
-    priceFrom: "$5,000",
-  },
-  {
-    id: "s6",
-    slug: "brand-identity",
-    title: "Brand & Identity",
-    icon: "Sparkles",
-    short: "Logos, systems and guidelines that make you unmistakable.",
-    description:
-      "Positioning, visual identity, typography, colour and a usage guide — everything required to look like the category leader across every touchpoint.",
-    media: work2,
-    features: [
-      "Brand positioning workshop",
-      "Logo and identity system",
-      "Typography & colour systems",
-      "Collateral and social templates",
-      "Brand guideline document",
-    ],
-    benefits: ["Instant recognition", "Consistency across teams", "Premium perceived value"],
-    priceFrom: "$1,500",
   },
 ];
 
 const portfolio: PortfolioItem[] = [
   {
     id: "p1",
-    title: "Nexora Analytics Platform",
-    client: "Nexora Labs",
-    category: "Web",
+    title: "Azil Healthcare Digital Growth",
+    client: "Azil Healthcare",
+    category: "Marketing",
     image: work1,
+    video: "",
+    gallery: [],
     description:
-      "A real-time analytics dashboard handling millions of events per day. We rebuilt the front end in React, cut initial load from 6.2s to 0.9s and introduced a motion system that makes data feel alive.",
-    tech: ["React", "TypeScript", "Tailwind", "Recharts", "Motion"],
-    year: "2026",
+      "Consistent digital marketing and brand building that helped Azil Healthcare grow from having no office to owning one.",
+    tech: ["Digital Marketing", "Social Media", "Branding"],
+    year: "2024",
   },
   {
     id: "p2",
-    title: "Aurelia Commerce Redesign",
-    client: "Aurelia Retail",
-    category: "Web",
+    title: "Bangalore Defence Academy Admissions",
+    client: "Bangalore Defence Academy",
+    category: "SEO",
     image: work2,
-    description:
-      "A full storefront redesign across mobile, tablet and desktop. Checkout friction dropped by 31% and mobile conversion rose 24% within the first quarter.",
-    tech: ["React", "Headless CMS", "Stripe", "Tailwind"],
-    year: "2025",
+    video: "",
+    gallery: [],
+    description: "Admissions marketing and SEO that grew the academy from 15 to 120 students.",
+    tech: ["SEO", "Lead Generation", "Social Ads"],
+    year: "2024",
   },
   {
     id: "p3",
-    title: "Veltra Growth Engine",
-    client: "Veltra Fintech",
+    title: "Royal Mobiles Branch Promotions",
+    client: "Royal Mobiles",
     category: "Marketing",
     image: work1,
-    description:
-      "Paid acquisition and landing page system for a fintech launch. 4.1x return on ad spend across the first six months with a unified reporting dashboard.",
-    tech: ["Meta Ads", "Google Ads", "GA4", "Landing Pages"],
-    year: "2025",
+    video: "",
+    gallery: [],
+    description: "Promotional campaigns executed across all seven Royal Mobiles branches.",
+    tech: ["Campaigns", "Poster Design", "Social Media"],
+    year: "2023",
   },
   {
     id: "p4",
-    title: "Orbit Health SEO Program",
-    client: "Orbit Health",
-    category: "SEO",
-    image: work2,
-    description:
-      "Technical remediation plus a 60-article content engine. Organic sessions grew 312% year on year and 47 primary keywords now rank on page one.",
-    tech: ["Technical SEO", "Schema", "Content Strategy"],
-    year: "2026",
-  },
-  {
-    id: "p5",
-    title: "Lumen Studio Identity",
-    client: "Lumen Studio",
+    title: "Banjo's Beverages Brand Shoot",
+    client: "Banjo's Beverages",
     category: "Branding",
-    image: work1,
-    description:
-      "A complete identity system for an architecture practice — mark, typography, motion signature and a 48-page guideline document.",
-    tech: ["Brand Strategy", "Identity", "Motion"],
-    year: "2024",
-  },
-  {
-    id: "p6",
-    title: "Kavi Logistics Portal",
-    client: "Kavi Logistics",
-    category: "Web",
     image: work2,
-    description:
-      "An internal operations portal replacing six spreadsheets. Dispatch teams now schedule 1,200 shipments a week from a single animated interface.",
-    tech: ["React", "TanStack", "Tailwind", "Charts"],
-    year: "2026",
-  },
-  {
-    id: "p7",
-    title: "Halo Beauty Campaign",
-    client: "Halo Beauty",
-    category: "Marketing",
-    image: work1,
-    description:
-      "Launch campaign across paid social and influencer channels, supported by a conversion-optimised microsite. Sold out the first production run in 11 days.",
-    tech: ["Paid Social", "Microsite", "Creative"],
+    video: "",
+    gallery: [],
+    description: "Professional photos, videos and a complete brand identity for a growing beverage brand.",
+    tech: ["Photography", "Video", "Brand Identity"],
     year: "2025",
   },
   {
-    id: "p8",
-    title: "Terra Foods Rebrand",
-    client: "Terra Foods",
-    category: "Branding",
+    id: "p5",
+    title: "Maniemakz Construction Website",
+    client: "Maniemakz Construction",
+    category: "Web",
+    image: work1,
+    video: "",
+    gallery: [],
+    description: "A professional, mobile-friendly company website for a construction firm.",
+    tech: ["React", "Responsive Design", "SEO"],
+    year: "2025",
+  },
+  {
+    id: "p6",
+    title: "Manwax Education SEO & Branding",
+    client: "Manwax Education",
+    category: "SEO",
     image: work2,
-    description:
-      "Repositioning and packaging identity for a sustainable food brand entering retail, extended into an e-commerce design system.",
-    tech: ["Positioning", "Packaging", "Web Design"],
-    year: "2024",
+    video: "",
+    gallery: [],
+    description: "Improved SEO and branding that made admissions easier for Manwax Education.",
+    tech: ["SEO", "Branding", "Content"],
+    year: "2025",
   },
 ];
+
+function client(
+  id: string,
+  name: string,
+  industry: string,
+  region: Client["region"],
+  logo = "",
+  details = "",
+): Client {
+  return {
+    id,
+    name,
+    industry,
+    region,
+    logo,
+    details: details || `${industry} client of Drawvax Infotech.`,
+    collaboration: "Digital marketing, branding and ongoing support tailored to their goals.",
+    since: "",
+  };
+}
 
 const clients: Client[] = [
-  {
-    id: "c1",
-    name: "Nexora Labs",
-    industry: "Data & Analytics",
-    logoText: "NEXORA",
-    details: "Enterprise analytics platform serving 400+ B2B customers across three continents.",
-    collaboration: "Front-end rebuild, design system and ongoing performance retainer since 2023.",
-    since: "2023",
-  },
-  {
-    id: "c2",
-    name: "Aurelia Retail",
-    industry: "E-commerce",
-    logoText: "AURELIA",
-    details: "Premium fashion retailer with 12 physical stores and a fast-growing online channel.",
-    collaboration: "Storefront redesign, checkout optimisation and seasonal campaign landing pages.",
-    since: "2024",
-  },
-  {
-    id: "c3",
-    name: "Veltra Fintech",
-    industry: "Financial Services",
-    logoText: "VELTRA",
-    details: "Digital lending platform operating in four markets with a mobile-first customer base.",
-    collaboration: "Growth marketing, funnel design and a conversion reporting dashboard.",
-    since: "2024",
-  },
-  {
-    id: "c4",
-    name: "Orbit Health",
-    industry: "Healthcare",
-    logoText: "ORBIT",
-    details: "Telehealth provider connecting patients to specialists across regional clinics.",
-    collaboration: "Technical SEO remediation and a long-form content engine.",
-    since: "2025",
-  },
-  {
-    id: "c5",
-    name: "Lumen Studio",
-    industry: "Architecture",
-    logoText: "LUMEN",
-    details: "Award-winning architecture practice known for adaptive reuse projects.",
-    collaboration: "Brand identity, guidelines and a portfolio website with cinematic transitions.",
-    since: "2022",
-  },
-  {
-    id: "c6",
-    name: "Kavi Logistics",
-    industry: "Supply Chain",
-    logoText: "KAVI",
-    details: "Regional freight operator moving 1,200+ shipments each week.",
-    collaboration: "Internal operations portal and dispatch dashboard.",
-    since: "2025",
-  },
-  {
-    id: "c7",
-    name: "Halo Beauty",
-    industry: "Consumer Goods",
-    logoText: "HALO",
-    details: "Direct-to-consumer skincare brand with a strong community following.",
-    collaboration: "Launch campaign, creative production and microsite build.",
-    since: "2025",
-  },
-  {
-    id: "c8",
-    name: "Terra Foods",
-    industry: "Food & Beverage",
-    logoText: "TERRA",
-    details: "Sustainable food producer expanding from farmers' markets into national retail.",
-    collaboration: "Rebrand, packaging system and e-commerce design.",
-    since: "2022",
-  },
+  client("c1", "Azil Healthcare", "Healthcare", "domestic", clientLogoAssets["azil-healthcare.png"], "Grew from no office to owning one."),
+  client("c2", "5G Mobiles", "Mobile Retail", "domestic", clientLogoAssets["5g-mobiles.png"], "Started and grew to a team of 5."),
+  client("c3", "Royal Mobiles", "Mobile Retail", "domestic", clientLogoAssets["royal-mobiles.png"], "Mobile retail chain with 7 branches."),
+  client("c4", "Hydraulic Operation Training Institute", "Education & Training", "domestic", clientLogoAssets["hydraulic-operation-training-institute.png"], "Vocational training for machinery operators."),
+  client("c5", "Bangalore Defence Academy", "Education", "domestic", clientLogoAssets["bangalore-defence-academy.png"], "Grew from 15 to 120 students."),
+  client("c6", "Banjo's Beverages", "Food & Beverage", "domestic", clientLogoAssets["banjos-beverages.png"], "Beverage brand with a growing following."),
+  client("c7", "Sri Sakthi Computers", "IT & Training", "domestic", clientLogoAssets["sri-sakthi-computers.png"], "Pivoted successfully into student courses."),
+  client("c8", "Sri Hari Properties", "Real Estate", "domestic", clientLogoAssets["sri-hari-properties.png"], "Sold multiple plots after marketing support."),
+  client("c9", "Meet & Eat", "Restaurant", "domestic"),
+  client("c10", "Super Cakes", "Bakery", "domestic", clientLogoAssets["super-cakes.png"], "Stable growth through consistent marketing."),
+  client("c11", "Blumine Tours & Travels", "Travel", "domestic"),
+  client("c12", "Mogo Pvt Ltd", "Business", "domestic"),
+  client("c13", "Blessing Tours & Travels", "Travel", "domestic"),
+  client("c14", "Vinayaga Architecture", "Architecture", "domestic"),
+  client("c15", "Big Chips", "Food Products", "domestic"),
+  client("c16", "Agni Training Academy", "Education", "domestic"),
+  client("c17", "Manwax Education", "Education", "domestic"),
+  client("c18", "Maniemakz Construction", "Construction", "domestic"),
+  client("c19", "Delibux", "Business", "domestic"),
+  client("c20", "Mantralaya Jewellery", "Jewellery", "domestic"),
+  client("c21", "Sumangali Jewellers", "Jewellery", "domestic"),
+  client("c22", "G-Tech", "Technology", "domestic"),
+  client("k1", "Almas Hospital", "Healthcare", "international"),
+  client("k2", "Anwaar Al Kuwait Factory Company", "Manufacturing", "international"),
+  client("k3", "Packco – Kuwait Packaging Services Company", "Packaging", "international"),
+  client("k4", "Samba Kuwait General Trading Company", "General Trading", "international"),
+  client("k5", "Emmanuelle Ladies Beauty Salon & Spa", "Beauty & Wellness", "international"),
+  client("k6", "Wonder Zone Kuwait", "Entertainment", "international"),
+  client("k7", "Yaccomaricard Kuwait", "Retail", "international"),
+  client("k8", "Al-Nafaa Group (ALN)", "Business Group", "international"),
+  client("k9", "Al Watani Factory for Fiberglass Co.", "Manufacturing", "international"),
+  client("k10", "SAMA International Co.", "Trading & Contracting", "international"),
+  client("k11", "PJR Group", "Business Group", "international"),
+  client("k12", "Kuwait Swedish General Trading & Contracting Co.", "Trading & Contracting", "international"),
+  client("k13", "Maccari", "Retail", "international"),
+  client("k14", "Packaging & Plastic Industries Co. KSCC", "Manufacturing", "international"),
 ];
 
-const reviews: Review[] = [
-  {
-    id: "r1",
-    name: "Priya Raghavan",
-    company: "Nexora Labs",
-    rating: 5,
-    comment:
-      "Drawvax rebuilt our entire dashboard front end in ten weeks. Load times dropped by six seconds and our customers immediately noticed. The communication was the best we've had from any agency.",
-    avatar: "PR",
-    status: "approved",
-    date: "2026-08-14",
-  },
-  {
-    id: "r2",
-    name: "Daniel Osei",
-    company: "Aurelia Retail",
-    rating: 5,
-    comment:
-      "They treated our conversion rate like it was their own revenue. Checkout friction is down, mobile sales are up 24%, and the design still looks gorgeous.",
-    avatar: "DO",
-    status: "approved",
-    date: "2026-07-02",
-  },
-  {
-    id: "r3",
-    name: "Meera Kulkarni",
-    company: "Veltra Fintech",
-    rating: 5,
-    comment:
-      "4.1x ROAS in six months, but honestly the reporting clarity impressed me more. We always knew exactly where the money went and why.",
-    avatar: "MK",
-    status: "approved",
-    date: "2026-06-19",
-  },
-  {
-    id: "r4",
-    name: "James Whitfield",
-    company: "Orbit Health",
-    rating: 4,
-    comment:
-      "Organic traffic tripled within a year. Onboarding took a little longer than planned, but the results more than made up for it.",
-    avatar: "JW",
-    status: "approved",
-    date: "2026-05-08",
-  },
-  {
-    id: "r5",
-    name: "Aisha Rahman",
-    company: "Lumen Studio",
-    rating: 5,
-    comment:
-      "The motion work on our portfolio site gets commented on in almost every client meeting. It genuinely wins us projects.",
-    avatar: "AR",
-    status: "approved",
-    date: "2026-04-21",
-  },
-  {
-    id: "r6",
-    name: "Tobias Lang",
-    company: "Kavi Logistics",
-    rating: 5,
-    comment:
-      "Our dispatch team went from six spreadsheets to one screen. Adoption was instant because the interface is that clear.",
-    avatar: "TL",
-    status: "pending",
-    date: "2026-09-10",
-  },
-];
-
-const news: NewsPost[] = [
-  {
-    id: "n1",
-    title: "Drawvax Infotech opens a dedicated motion design lab",
-    date: "2026-09-18",
-    tag: "Announcement",
-    excerpt:
-      "A new in-house team focused entirely on interface motion, cinematic transitions and performance-safe animation.",
-    body: "Our new motion lab brings interaction designers and front-end engineers into one room. Every client project now ships with a documented motion language — timing curves, choreography and reduced-motion fallbacks — so animation enhances usability instead of fighting it.",
-    image: work1,
-  },
-  {
-    id: "n2",
-    title: "Nexora Analytics platform goes live with a 0.9s load time",
-    date: "2026-09-02",
-    tag: "Project",
-    excerpt:
-      "The rebuilt Nexora dashboard launched this month after a ten-week engineering sprint.",
-    body: "We replaced a legacy front end with a React and TypeScript architecture, introduced route-level code splitting and reduced initial payload by 71%. Median load time is now 0.9 seconds on a 4G connection.",
-    image: work2,
-  },
-  {
-    id: "n3",
-    title: "New service: conversion-focused SEO retainers",
-    date: "2026-08-12",
-    tag: "New Service",
-    excerpt:
-      "Technical SEO, content and CRO packaged into a single monthly programme with transparent reporting.",
-    body: "Rankings only matter if they turn into revenue. Our new retainer combines technical remediation, a content engine and continuous conversion testing, reported through one dashboard your whole team can read.",
-  },
-  {
-    id: "n4",
-    title: "Team milestone: 240 projects delivered",
-    date: "2026-07-25",
-    tag: "Milestone",
-    excerpt: "Eight years, 130+ clients and a client satisfaction score we're genuinely proud of.",
-    body: "Thank you to every client who trusted us with their product. We're marking the milestone by expanding our support team so response times stay under two hours during business hours.",
-  },
-];
-
-const contact: ContactDetails = {
-  address: "4th Floor, Prestige Tech Park, Outer Ring Road, Bengaluru 560103, India",
-  phone: "+91 80 4718 2200",
-  email: "hello@drawvax.com",
-  hours: "Monday – Friday, 9:30am – 6:30pm IST",
-  mapQuery: "Prestige Tech Park, Bengaluru",
-  socials: [
-    { label: "LinkedIn", url: "https://www.linkedin.com/" },
-    { label: "X", url: "https://x.com/" },
-    { label: "Instagram", url: "https://instagram.com/" },
-    { label: "GitHub", url: "https://github.com/" },
-  ],
-};
-
-const leads: Lead[] = [
-  {
-    id: "l1",
-    source: "Contact form",
-    name: "Rohan Mehta",
-    email: "rohan@brightfold.io",
-    message: "Looking for a marketing site rebuild before our Series A announcement in November.",
-    date: "2026-09-20",
-  },
-  {
-    id: "l2",
-    source: "Chatbot",
-    name: "Elena Fischer",
-    email: "elena@studioverde.de",
-    message: "What are your typical timelines for a UI/UX engagement?",
-    date: "2026-09-19",
-  },
-  {
-    id: "l3",
-    source: "Newsletter",
-    name: "Subscriber",
-    email: "marcus.lee@outlook.com",
-    message: "Newsletter signup",
-    date: "2026-09-17",
-  },
-];
-
-export const initialContent: SiteContent = {
-  settings,
-  founder,
-  services,
-  portfolio,
-  clients,
-  reviews,
-  news,
-  contact,
-  leads,
-};
-
-export const portfolioCategories = ["All", "Web", "Marketing", "SEO", "Branding"] as const;
-
-export const processSteps = [
+export const processSteps: ProcessStep[] = [
   {
     step: "01",
-    title: "Discover",
-    text: "Workshops, audits and analytics review so we solve the real problem, not the assumed one.",
+    label: "Understand",
+    title: "Share Your Requirements",
+    text: "We schedule a meeting to understand your business, goals, requirements and expectations.",
   },
   {
     step: "02",
-    title: "Design",
-    text: "Flows, interfaces and a motion language, prototyped and validated before a line of code.",
+    label: "Plan",
+    title: "Build the Right Plan",
+    text: "We create a practical strategy based on your requirements and budget, focusing on the best possible quality and value.",
   },
   {
     step: "03",
-    title: "Develop",
-    text: "Component-driven front-end engineering with weekly demos and open staging environments.",
+    label: "Approve",
+    title: "Review & Confirm",
+    text: "Before starting the work, we present the proposed plan, scope and requirements for your review and approval.",
   },
   {
     step: "04",
-    title: "Deliver",
-    text: "Launch, measure, iterate. Handover documentation and a support window on every project.",
+    label: "Deliver",
+    title: "Execute & Deliver",
+    text: "We build, test, launch and hand over the finished work, then provide ongoing support to make sure everything runs smoothly.",
   },
 ];
+
+export const defaultContent: CmsContent = { settings, founder, contact, process: processSteps, services, portfolio, clients };
+
+export const portfolioCategories = ["All", "Web", "Marketing", "SEO", "Branding"] as const;
 
 export const chatbotFaqs = [
   {
     keywords: ["service", "offer", "do you"],
     answer:
-      "We offer Web Development, UI/UX Design, Digital Marketing, SEO, App Development and Brand Identity. Which one are you exploring?",
+      "We offer Technical Services (websites, software, apps, hosting, UI/UX), Non-Technical Services (digital marketing, SEO, social media, branding, content) and Manpower & Business Support. Which one are you exploring?",
   },
   {
     keywords: ["price", "pricing", "cost", "budget", "quote"],
     answer:
-      "Websites typically start around $2,400, design engagements from $1,800, and marketing or SEO retainers from $900/month. Share your scope and we'll send an exact quote.",
+      "We always work according to your budget. Share your requirements and we'll send a practical plan with a clear quote.",
   },
   {
     keywords: ["time", "timeline", "how long", "deadline"],
-    answer:
-      "A marketing site usually takes 3–5 weeks, a web app 8–12 weeks. Retainers start within a week of kickoff.",
+    answer: "A business website usually takes 1–3 weeks; larger apps and software depend on scope. We confirm timelines before starting.",
   },
   {
     keywords: ["contact", "email", "phone", "call", "reach"],
-    answer:
-      "You can reach us at hello@drawvax.com or +91 80 4718 2200. We reply within two business hours.",
+    answer: "You can reach us at drawvaxinfotech.off@gmail.com or +91 6374025393.",
   },
   {
     keywords: ["hours", "open", "timing", "available"],
-    answer: "Our team is available Monday to Friday, 9:30am – 6:30pm IST.",
+    answer: "Our team is available Monday to Saturday, 9:30am – 6:30pm IST.",
   },
   {
     keywords: ["portfolio", "work", "case study", "example"],
-    answer:
-      "Have a look at our Portfolio page — Nexora, Aurelia and Orbit Health are good places to start.",
+    answer: "Have a look at our Portfolio and Clients pages — we've worked with 35+ businesses in India and Kuwait.",
   },
 ];

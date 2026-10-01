@@ -22,7 +22,7 @@ export const Route = createFileRoute("/news")({
 });
 
 function NewsPage() {
-  const { content } = useSiteContent();
+  const { news, loading } = useSiteContent();
 
   return (
     <>
@@ -37,10 +37,15 @@ function NewsPage() {
       />
       <Section>
         <Stagger className="grid gap-6 md:grid-cols-2">
-          {content.news.map((post) => (
+          {news.map((post) => (
             <NewsCard key={post.id} post={post} />
           ))}
         </Stagger>
+        {!loading && news.length === 0 ? (
+          <p className="glass-soft mx-auto max-w-lg rounded-2xl px-5 py-8 text-center text-sm text-muted-foreground">
+            No updates yet — check back soon.
+          </p>
+        ) : null}
       </Section>
     </>
   );

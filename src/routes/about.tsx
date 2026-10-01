@@ -10,7 +10,7 @@ export const Route = createFileRoute("/about")({
       {
         name: "description",
         content:
-          "Eight years, 240+ projects and one obsession: client satisfaction. Meet the studio and the founder behind Drawvax Infotech.",
+          "5+ years, 130 projects and one motive: client satisfaction and company satisfaction. Meet the studio and the founder behind Drawvax Infotech.",
       },
       { property: "og:title", content: "About Drawvax Infotech" },
       {

@@ -1,13 +1,7 @@
 /**
- * Client-side content store.
- *
- * Holds the whole site content in React state so the Admin Panel can edit it
- * without a backend. Changes persist to localStorage for the session/browser.
- *
- * TODO: connect to backend — replace this provider's mutations with API calls
- * (see src/data/api.ts) and hydrate `content` from the server.
+ * Site content store — loads live content from the backend and exposes
+ * admin mutations. Visitors see defaults instantly, then live data.
  */
-
 import {
   createContext,
   useCallback,
@@ -17,154 +11,260 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/data/api";
 import {
-  SLOGAN_REQUIRED_PHRASE,
-  initialContent,
+  defaultContent,
+  type CmsContent,
+  type CmsKey,
   type Client,
-  type ContactDetails,
-  type Founder,
   type Lead,
   type NewsPost,
   type PortfolioItem,
   type Review,
-  type Service,
-  type SiteContent,
-  type SiteSettings,
 } from "@/data/content";
 
-const STORAGE_KEY = "drawvax.content.v1";
-const AUTH_KEY = "drawvax.admin.v1";
-
 type Ctx = {
-  content: SiteContent;
+  content: CmsContent;
+  reviews: Review[];
+  news: NewsPost[];
+  leads: Lead[];
+  loading: boolean;
   isAdmin: boolean;
-  login: () => void;
-  logout: () => void;
-  updateSettings: (patch: Partial<SiteSettings>) => void;
-  updateFounder: (patch: Partial<Founder>) => void;
-  updateContact: (patch: Partial<ContactDetails>) => void;
-  upsertService: (item: Service) => void;
-  removeService: (id: string) => void;
-  upsertPortfolio: (item: PortfolioItem) => void;
-  removePortfolio: (id: string) => void;
-  upsertClient: (item: Client) => void;
-  removeClient: (id: string) => void;
-  addReview: (item: Review) => void;
-  setReviewStatus: (id: string, status: Review["status"]) => void;
-  removeReview: (id: string) => void;
-  upsertNews: (item: NewsPost) => void;
-  removeNews: (id: string) => void;
-  addLead: (item: Lead) => void;
-  resetContent: () => void;
+  userEmail: string | null;
+  authReady: boolean;
+  saveSection: <K extends CmsKey>(key: K, value: CmsContent[K]) => Promise<void>;
+  updateFounder: (value: CmsContent["founder"]) => Promise<void>;
+  updateContact: (value: CmsContent["contact"]) => Promise<void>;
+  upsertService: (value: CmsContent["services"][number]) => Promise<void>;
+  removeService: (id: string) => Promise<void>;
+  upsertPortfolio: (value: PortfolioItem) => Promise<void>;
+  removePortfolio: (id: string) => Promise<void>;
+  upsertClient: (value: Client) => Promise<void>;
+  removeClient: (id: string) => Promise<void>;
+  addReview: (value: Review) => Promise<void>;
+  updateReview: (value: Review) => Promise<void>;
+  setReviewStatus: (id: string, status: Review["status"]) => Promise<void>;
+  removeReview: (id: string) => Promise<void>;
+  upsertNews: (value: NewsPost) => Promise<void>;
+  removeNews: (id: string) => Promise<void>;
+  reloadReviews: () => Promise<void>;
+  reloadNews: () => Promise<void>;
+  reloadLeads: () => Promise<void>;
 };
 
 const SiteContentContext = createContext<Ctx | null>(null);
 
-/** The slogan must always contain the exact phrase "Client Satisfaction". */
-export function isValidSlogan(slogan: string) {
-  return slogan.includes(SLOGAN_REQUIRED_PHRASE);
-}
-
 export function SiteContentProvider({ children }: { children: ReactNode }) {
-  const [content, setContent] = useState<SiteContent>(initialContent);
+  const [content, setContent] = useState<CmsContent>(defaultContent);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [news, setNews] = useState<NewsPost[]>([]);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [authReady, setAuthReady] = useState(false);
 
-  // Hydrate after mount so SSR and the first client render always match.
+  const reloadReviews = useCallback(async () => {
+    try {
+      setReviews(await api.getReviews());
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+
+  const reloadNews = useCallback(async () => {
+    try {
+      setNews(await api.getNews());
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+
+  const reloadLeads = useCallback(async () => {
+    try {
+      setLeads(await api.getLeads());
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setContent({ ...initialContent, ...(JSON.parse(raw) as SiteContent) });
-      setIsAdmin(localStorage.getItem(AUTH_KEY) === "1");
-    } catch {
-      /* ignore corrupted storage */
-    }
+    let cancelled = false;
+    Promise.allSettled([api.getContent(), api.getReviews(), api.getNews()]).then(([c, r, n]) => {
+      if (cancelled) return;
+      if (c.status === "fulfilled") setContent(c.value);
+      if (r.status === "fulfilled") setReviews(r.value);
+      if (n.status === "fulfilled") setNews(n.value);
+      setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const persist = useCallback((next: SiteContent) => {
-    setContent(next);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      /* storage may be unavailable */
-    }
+  useEffect(() => {
+    const resolve = async (email: string | null) => {
+      setUserEmail(email);
+      const admin = email ? await api.checkAdmin() : false;
+      setIsAdmin(admin);
+      setAuthReady(true);
+      // Admins can see pending reviews — refetch with the new permissions.
+      if (admin) {
+        reloadReviews();
+        reloadLeads();
+      } else {
+        setLeads([]);
+      }
+    };
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "INITIAL_SESSION") {
+        // Defer so Supabase finishes its own state update first.
+        setTimeout(() => resolve(session?.user.email ?? null), 0);
+      }
+    });
+    return () => data.subscription.unsubscribe();
+  }, [reloadLeads, reloadReviews]);
+
+  const saveSection = useCallback(async <K extends CmsKey>(key: K, value: CmsContent[K]) => {
+    await api.saveSection(key, value);
+    setContent((current) => ({ ...current, [key]: value }));
   }, []);
 
-  const patch = useCallback(
-    (fn: (current: SiteContent) => SiteContent) => {
-      setContent((current) => {
-        const next = fn(current);
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-        } catch {
-          /* noop */
-        }
-        return next;
-      });
-    },
-    [],
+  const updateFounder = useCallback(
+    (value: CmsContent["founder"]) => saveSection("founder", value),
+    [saveSection],
   );
-
-  const upsert = <T extends { id: string }>(list: T[], item: T) =>
-    list.some((entry) => entry.id === item.id)
-      ? list.map((entry) => (entry.id === item.id ? item : entry))
-      : [item, ...list];
+  const updateContact = useCallback(
+    (value: CmsContent["contact"]) => saveSection("contact", value),
+    [saveSection],
+  );
+  const upsertService = useCallback(
+    (value: CmsContent["services"][number]) =>
+      saveSection(
+        "services",
+        content.services.some((item) => item.id === value.id)
+          ? content.services.map((item) => (item.id === value.id ? value : item))
+          : [...content.services, value],
+      ),
+    [content.services, saveSection],
+  );
+  const removeService = useCallback(
+    (id: string) => saveSection("services", content.services.filter((item) => item.id !== id)),
+    [content.services, saveSection],
+  );
+  const upsertPortfolio = useCallback(
+    (value: PortfolioItem) =>
+      saveSection(
+        "portfolio",
+        content.portfolio.some((item) => item.id === value.id)
+          ? content.portfolio.map((item) => (item.id === value.id ? value : item))
+          : [...content.portfolio, value],
+      ),
+    [content.portfolio, saveSection],
+  );
+  const removePortfolio = useCallback(
+    (id: string) => saveSection("portfolio", content.portfolio.filter((item) => item.id !== id)),
+    [content.portfolio, saveSection],
+  );
+  const upsertClient = useCallback(
+    (value: Client) =>
+      saveSection(
+        "clients",
+        content.clients.some((item) => item.id === value.id)
+          ? content.clients.map((item) => (item.id === value.id ? value : item))
+          : [...content.clients, value],
+      ),
+    [content.clients, saveSection],
+  );
+  const removeClient = useCallback(
+    (id: string) => saveSection("clients", content.clients.filter((item) => item.id !== id)),
+    [content.clients, saveSection],
+  );
+  const addReview = useCallback(async (value: Review) => {
+    await api.saveReview({ ...value, isNew: true });
+    await reloadReviews();
+  }, [reloadReviews]);
+  const updateReview = useCallback(async (value: Review) => {
+    await api.saveReview(value);
+    await reloadReviews();
+  }, [reloadReviews]);
+  const setReviewStatus = useCallback(async (id: string, status: Review["status"]) => {
+    const review = reviews.find((item) => item.id === id);
+    if (!review) return;
+    await api.saveReview({ ...review, status });
+    await reloadReviews();
+  }, [reloadReviews, reviews]);
+  const removeReview = useCallback(async (id: string) => {
+    await api.deleteReview(id);
+    await reloadReviews();
+  }, [reloadReviews]);
+  const upsertNews = useCallback(async (value: NewsPost) => {
+    await api.saveNews({ ...value, id: value.id });
+    await reloadNews();
+  }, [reloadNews]);
+  const removeNews = useCallback(async (id: string) => {
+    await api.deleteNews(id);
+    await reloadNews();
+  }, [reloadNews]);
 
   const value = useMemo<Ctx>(
     () => ({
       content,
+      reviews,
+      news,
+      leads,
+      loading,
       isAdmin,
-      login: () => {
-        setIsAdmin(true);
-        try {
-          localStorage.setItem(AUTH_KEY, "1");
-        } catch {
-          /* noop */
-        }
-      },
-      logout: () => {
-        setIsAdmin(false);
-        try {
-          localStorage.removeItem(AUTH_KEY);
-        } catch {
-          /* noop */
-        }
-      },
-      // TODO: connect to backend — PUT /api/settings
-      updateSettings: (p) =>
-        patch((c) => {
-          const slogan = p.slogan !== undefined && !isValidSlogan(p.slogan) ? c.settings.slogan : p.slogan;
-          return { ...c, settings: { ...c.settings, ...p, ...(slogan ? { slogan } : {}) } };
-        }),
-      // TODO: connect to backend — PUT /api/founder
-      updateFounder: (p) => patch((c) => ({ ...c, founder: { ...c.founder, ...p } })),
-      // TODO: connect to backend — PUT /api/contact-details
-      updateContact: (p) => patch((c) => ({ ...c, contact: { ...c.contact, ...p } })),
-      // TODO: connect to backend — POST/PUT /api/services
-      upsertService: (item) => patch((c) => ({ ...c, services: upsert(c.services, item) })),
-      removeService: (id) => patch((c) => ({ ...c, services: c.services.filter((s) => s.id !== id) })),
-      // TODO: connect to backend — POST/PUT /api/portfolio
-      upsertPortfolio: (item) => patch((c) => ({ ...c, portfolio: upsert(c.portfolio, item) })),
-      removePortfolio: (id) =>
-        patch((c) => ({ ...c, portfolio: c.portfolio.filter((p2) => p2.id !== id) })),
-      // TODO: connect to backend — POST/PUT /api/clients
-      upsertClient: (item) => patch((c) => ({ ...c, clients: upsert(c.clients, item) })),
-      removeClient: (id) => patch((c) => ({ ...c, clients: c.clients.filter((x) => x.id !== id) })),
-      // TODO: connect to backend — POST /api/reviews
-      addReview: (item) => patch((c) => ({ ...c, reviews: [item, ...c.reviews] })),
-      setReviewStatus: (id, status) =>
-        patch((c) => ({
-          ...c,
-          reviews: c.reviews.map((r) => (r.id === id ? { ...r, status } : r)),
-        })),
-      removeReview: (id) => patch((c) => ({ ...c, reviews: c.reviews.filter((r) => r.id !== id) })),
-      // TODO: connect to backend — POST/PUT /api/news
-      upsertNews: (item) => patch((c) => ({ ...c, news: upsert(c.news, item) })),
-      removeNews: (id) => patch((c) => ({ ...c, news: c.news.filter((n) => n.id !== id) })),
-      // TODO: connect to backend — POST /api/leads
-      addLead: (item) => patch((c) => ({ ...c, leads: [item, ...c.leads] })),
-      resetContent: () => persist(initialContent),
+      userEmail,
+      authReady,
+      saveSection,
+      updateFounder,
+      updateContact,
+      upsertService,
+      removeService,
+      upsertPortfolio,
+      removePortfolio,
+      upsertClient,
+      removeClient,
+      addReview,
+      updateReview,
+      setReviewStatus,
+      removeReview,
+      upsertNews,
+      removeNews,
+      reloadReviews,
+      reloadNews,
+      reloadLeads,
     }),
-    [content, isAdmin, patch, persist],
+    [
+      content,
+      reviews,
+      news,
+      leads,
+      loading,
+      isAdmin,
+      userEmail,
+      authReady,
+      saveSection,
+      updateFounder,
+      updateContact,
+      upsertService,
+      removeService,
+      upsertPortfolio,
+      removePortfolio,
+      upsertClient,
+      removeClient,
+      addReview,
+      updateReview,
+      setReviewStatus,
+      removeReview,
+      upsertNews,
+      removeNews,
+      reloadReviews,
+      reloadNews,
+      reloadLeads,
+    ],
   );
 
   return <SiteContentContext.Provider value={value}>{children}</SiteContentContext.Provider>;
@@ -175,3 +275,5 @@ export function useSiteContent() {
   if (!ctx) throw new Error("useSiteContent must be used inside <SiteContentProvider>");
   return ctx;
 }
+
+export const approvedReviews = (reviews: Review[]) => reviews.filter((r) => r.status === "approved");

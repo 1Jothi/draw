@@ -29,8 +29,11 @@ function PortfolioPage() {
   const [filter, setFilter] = useState<string>("All");
   const [active, setActive] = useState<PortfolioItem | null>(null);
 
+  const publishedItems = content.portfolio
+    .filter((item) => item.published !== false)
+    .sort((first, second) => (first.sortOrder ?? 0) - (second.sortOrder ?? 0));
   const items =
-    filter === "All" ? content.portfolio : content.portfolio.filter((item) => item.category === filter);
+    filter === "All" ? publishedItems : publishedItems.filter((item) => item.category === filter);
 
   return (
     <>
@@ -108,6 +111,7 @@ function PortfolioPage() {
                   {active.client} · {active.year}
                 </p>
                 <p className="mt-5 leading-relaxed text-muted-foreground">{active.description}</p>
+                {active.url ? <a href={active.url} target="_blank" rel="noreferrer" className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-primary underline underline-offset-4">Visit project</a> : null}
                 <div className="mt-6 flex flex-wrap gap-2">
                   {active.tech.map((tech) => (
                     <span key={tech} className="glass-soft rounded-lg px-3 py-1.5 text-xs">

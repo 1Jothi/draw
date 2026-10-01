@@ -20,7 +20,6 @@ function answerFor(input: string) {
 }
 
 export function Chatbot() {
-  const { addLead } = useSiteContent();
   const [open, setOpen] = useState(false);
   const [welcomed, setWelcomed] = useState(false);
   const [input, setInput] = useState("");
@@ -62,12 +61,18 @@ export function Chatbot() {
       toast.error("Please add your name and a valid email.");
       return;
     }
-    // TODO: connect to backend — persist chatbot lead
-    const saved = await api.submitChatLead({
-      ...lead,
-      message: messages.filter((m) => m.from === "user").map((m) => m.text).join(" | ") || "Chat enquiry",
-    });
-    addLead(saved);
+    const saved = { name: lead.name.trim() };
+    try {
+      await api.submitLead({
+        source: "Chatbot",
+        name: lead.name.trim().slice(0, 120),
+        email: lead.email.trim().slice(0, 255),
+        message: (messages.filter((m) => m.from === "user").map((m) => m.text).join(" | ") || "Chat enquiry").slice(0, 3000),
+      });
+    } catch {
+      toast.error("Couldn't send right now. Please try again.");
+      return;
+    }
     setLead({ name: "", email: "" });
     setMessages((current) => [
       ...current,
