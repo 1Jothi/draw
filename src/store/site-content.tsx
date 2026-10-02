@@ -291,4 +291,3 @@ export function useSiteContent() {
   return ctx;
 }
 
-export const approvedReviews = (reviews: Review[]) => reviews.filter((r) => r.status === "approved");

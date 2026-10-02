@@ -6,7 +6,8 @@ import { toast } from "sonner";
 import { Section, SectionHeading } from "@/components/ui-kit/Section";
 import { ReviewCard, Stars } from "@/components/cards/ReviewCard";
 import { Reveal } from "@/components/motion/Reveal";
-import { approvedReviews, useSiteContent } from "@/store/site-content";
+import { approvedReviews } from "@/data/reviews";
+import { useSiteContent } from "@/store/site-content";
 import { api } from "@/data/api";
 
 export function Testimonials({

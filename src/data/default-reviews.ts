@@ -1,0 +1,186 @@
+import type { Review } from "@/data/content";
+
+const reviewDetails: [string, string, string, string][] = [
+  [
+    "Mohammed Abdul Rahman Al-Harbi",
+    "Anwaar Al Kuwait Factory Company",
+    "Drawvax supported us with both manpower and digital marketing. We are very satisfied with their commitment and the results.",
+    "Drawvax Infotech supported our factory with skilled manpower and digital marketing. Their team understood our requirements quickly, delivered on time and stayed responsive throughout. We are very satisfied with the service and the results.",
+  ],
+  [
+    "Ahmed Khalid Al-Mansoori",
+    "Packco – Kuwait Packaging Services Company",
+    "Consistent marketing support month after month. Our business is going well and we trust the team completely.",
+    "Drawvax has given Packco consistent marketing support. Every campaign is planned carefully and delivered on schedule. Our business is going well and we trust their team completely.",
+  ],
+  [
+    "Abdullah Faisal Al-Qahtani",
+    "Samba Kuwait General Trading Company",
+    "Their targeted campaigns bring us genuine enquiries, not just numbers. A reliable marketing partner.",
+    "The targeted campaigns Drawvax runs for us generate genuine enquiries from real customers. They focus on quality leads rather than vanity numbers, which is exactly what our trading business needed.",
+  ],
+  [
+    "Aisha Mohammed Al-Mansoori",
+    "Emmanuelle Ladies Beauty Salon & Spa",
+    "We gained much better visibility online and were able to expand into spa services. Thank you, Drawvax.",
+    "With Drawvax's marketing support our salon became far more visible online. The growth in customers gave us the confidence to expand into spa services. Thank you to the whole team.",
+  ],
+  [
+    "Fatima Noor Al-Harbi",
+    "Wonder Zone Kuwait",
+    "Strong marketing support and great promotion ideas for Wonder Zone. Highly recommended.",
+    "Drawvax provided strong marketing support and creative promotion ideas for Wonder Zone Kuwait. They were always available and delivered what they promised. Highly recommended.",
+  ],
+  [
+    "Maryam Abdulrahman Al-Qahtani",
+    "Yaccomaricard Kuwait",
+    "Our online visibility improved noticeably after working with Drawvax. Professional and easy to work with.",
+    "After working with Drawvax our online visibility improved noticeably. The team is professional, easy to communicate with and genuinely cares about results.",
+  ],
+  [
+    "Azil",
+    "AZIL Healthcare",
+    "We started with no office. Thanks to Drawvax's consistent digital marketing, today we own one.",
+    "When we started, AZIL Healthcare did not even have an office. Drawvax handled our digital marketing consistently, month after month, and the growth followed. Today we own our own office — a milestone we credit to their support.",
+  ],
+  [
+    "Mohammed Faisal",
+    "5G Mobiles",
+    "Drawvax helped me start my shop and grow it to five employees. Real support from day one.",
+    "Drawvax helped me launch 5G Mobiles and promote it from the very beginning. Their marketing brought in customers steadily and today the shop runs with five employees. Real support from day one.",
+  ],
+  [
+    "Umar",
+    "Royal Mobiles",
+    "With seven branches, promotions are complex — Drawvax executed every campaign successfully.",
+    "Royal Mobiles has seven branches, so coordinating promotions is not easy. Drawvax planned and executed every promotional campaign successfully across all branches.",
+  ],
+  [
+    "Management",
+    "Hydraulic Operation Training Institute",
+    "They helped us handle negative reviews and rebuild our reputation. Impossible Make Possible — That's the Power of Drawvax Infotech.",
+    "We were struggling with negative online reviews that were hurting admissions. Drawvax helped us manage them properly and rebuild our reputation. Impossible Make Possible — That's the Power of Drawvax Infotech.",
+  ],
+  [
+    "Arun",
+    "Bangalore Defence Academy",
+    "We grew from 15 students to 120 with Drawvax's marketing. Truly grateful.",
+    "When we started working with Drawvax we had just 15 students. Through their marketing and online presence work, Bangalore Defence Academy has grown to 120 students. Truly grateful for their support.",
+  ],
+  [
+    "G-Tech",
+    "G-Tech (Hawally, Kuwait)",
+    "Professional branding materials delivered perfectly. Special thanks to Murugu Santhosh.",
+    "Drawvax created professional branding materials for G-Tech that represent us perfectly in the Kuwait market. Special thanks to Murugu Santhosh for his personal attention.",
+  ],
+  [
+    "Management",
+    "Sri Sakthi Computers",
+    "Drawvax helped us pivot to student courses successfully. The change worked better than we hoped.",
+    "Drawvax guided Sri Sakthi Computers through a pivot into student courses and promoted the new direction. The change worked better than we hoped.",
+  ],
+  [
+    "Kathirvel",
+    "Meet & Eat",
+    "After six months of Drawvax's support we won the Sales Champion Award 2023.",
+    "After six months of support from Drawvax, Meet & Eat won the Sales Champion Award 2023. Their marketing made a real difference to our sales.",
+  ],
+  [
+    "Prakash",
+    "Super Cakes",
+    "Stable, steady growth through consistent digital marketing. Very happy.",
+    "Super Cakes has seen stable growth thanks to Drawvax's consistent digital marketing. They keep our brand active and visible every week.",
+  ],
+  [
+    "Krishna",
+    "Banjo's Beverages",
+    "They created professional photos, videos and branding for Banjo's. Excellent quality.",
+    "Drawvax created professional photos, videos and complete branding for Banjo's Beverages. The quality was excellent and it lifted how customers see our brand.",
+  ],
+  [
+    "Hari",
+    "Sri Hari Properties",
+    "We sold multiple plots after Drawvax took over our marketing.",
+    "After Drawvax started our property marketing, Sri Hari Properties sold multiple plots. Their campaigns reached exactly the right buyers.",
+  ],
+  [
+    "Management",
+    "Blumine Tours & Travels",
+    "We found Drawvax on Google — and through them we gained valuable VIP contacts.",
+    "We found Drawvax through Google, and their marketing helped Blumine Tours & Travels gain valuable VIP customer contacts.",
+  ],
+  [
+    "Mohan",
+    "Mogo Pvt Ltd",
+    "A long-term growth partner we rely on.",
+    "Drawvax has been a long-term growth partner for Mogo Pvt Ltd. We rely on them for ongoing digital support.",
+  ],
+  [
+    "Management",
+    "Blessing Tours & Travels",
+    "Great package ideas and promotion support for our travel business.",
+    "Drawvax supported Blessing Tours & Travels with fresh package ideas and promotions that customers loved.",
+  ],
+  [
+    "Alaguraja",
+    "Vinayaga Architecture",
+    "Drawvax gave us much better B2B reach.",
+    "With Drawvax's marketing, Vinayaga Architecture now reaches far more B2B clients than before.",
+  ],
+  [
+    "Thirumalai Raghavan",
+    "Big Chips",
+    "Their influencer marketing boosted our visibility quickly.",
+    "Drawvax ran influencer marketing for Big Chips that boosted our brand visibility quickly and brought new customers.",
+  ],
+  [
+    "Management",
+    "Agni Training Academy",
+    "Referred by Bangalore Defence Academy — and we are very happy with the support.",
+    "We were referred to Drawvax by Bangalore Defence Academy, and we are very happy with the support they have given Agni Training Academy.",
+  ],
+  [
+    "Karthikeyan",
+    "Manwax Education",
+    "Improved SEO and branding made our admissions much easier.",
+    "Drawvax improved our SEO and branding, and admissions at Manwax Education have become much easier as a result.",
+  ],
+  [
+    "Manikandan",
+    "Maniemakz Construction",
+    "They delivered a professional website for our construction business.",
+    "Drawvax delivered a professional website for Maniemakz Construction that we are proud to share with clients.",
+  ],
+  [
+    "Ajith Kumar",
+    "Delibux",
+    "Ongoing promotional material support whenever we need it.",
+    "Drawvax provides Delibux with ongoing promotional material support — fast, creative and always on brand.",
+  ],
+  [
+    "Mohanasundaram",
+    "Mantralaya Jewels",
+    "Stunning AI-generated visuals and ad posters for our jewellery.",
+    "Drawvax created stunning AI-generated visuals and ad posters for Mantralaya Jewels that customers noticed immediately.",
+  ],
+  [
+    "Management",
+    "Sumangali Jewellers",
+    "Beautiful festival ad poster designs every season.",
+    "Drawvax designs beautiful festival ad posters for Sumangali Jewellers every season.",
+  ],
+];
+
+export const defaultReviews: Review[] = reviewDetails.map(
+  ([name, company, comment, fullStory], index) => ({
+    id: `default-review-${index + 1}`,
+    name,
+    company,
+    rating: 5,
+    comment,
+    fullStory,
+    status: "approved",
+    createdAt: "2025-01-01T00:00:00.000Z",
+    sortOrder: index + 1,
+  }),
+);

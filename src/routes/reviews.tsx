@@ -5,6 +5,7 @@ import { Stagger, staggerChild } from "@/components/motion/Reveal";
 import { motion } from "motion/react";
 import { ReviewCard } from "@/components/cards/ReviewCard";
 import { Testimonials } from "@/components/sections/Testimonials";
+import { approvedReviews } from "@/data/reviews";
 import { useSiteContent } from "@/store/site-content";
 
 export const Route = createFileRoute("/reviews")({
@@ -25,7 +26,7 @@ export const Route = createFileRoute("/reviews")({
 
 function ReviewsPage() {
   const { reviews } = useSiteContent();
-  const approved = reviews.filter((review) => review.status === "approved");
+  const approved = approvedReviews(reviews);
   const average = approved.length
     ? (approved.reduce((sum, review) => sum + review.rating, 0) / approved.length).toFixed(1)
     : "—";
