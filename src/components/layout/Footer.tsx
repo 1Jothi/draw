@@ -6,6 +6,7 @@ import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { useSiteContent } from "@/store/site-content";
 import { api } from "@/data/api";
+import drawvaxLogo from "@/assets/drawvax-logo.jpg";
 
 export function Footer() {
   const { content } = useSiteContent();
@@ -41,9 +42,11 @@ export function Footer() {
         <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
           <div>
             <div className="flex items-center gap-3">
-              <span className="gradient-accent grid size-10 place-items-center rounded-xl font-display text-lg font-bold text-primary-foreground">
-                D
-              </span>
+              <img
+                src={drawvaxLogo}
+                alt="Drawvax Infotech logo"
+                className="h-10 w-auto shrink-0 rounded-lg object-contain"
+              />
               <span className="font-display text-lg font-bold">{content.contact.legalName}</span>
             </div>
             {/* Mandatory slogan */}

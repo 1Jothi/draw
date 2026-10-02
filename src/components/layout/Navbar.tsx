@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useSiteContent } from "@/store/site-content";
 import { cn } from "@/lib/utils";
 import { SLOGAN } from "@/data/content";
+import drawvaxLogo from "@/assets/drawvax-logo.jpg";
 
 const links = [
   { to: "/", label: "Home" },
@@ -62,12 +63,12 @@ export function Navbar() {
           )}
         >
           <Link to="/" className="group flex min-w-0 items-center gap-3" onClick={() => setOpen(false)}>
-            <motion.span
-              whileHover={{ rotate: 12, scale: 1.08 }}
-              className="gradient-accent grid size-10 shrink-0 place-items-center rounded-xl font-display text-lg font-bold text-primary-foreground"
-            >
-              D
-            </motion.span>
+            <motion.img
+              whileHover={{ rotate: 8, scale: 1.04 }}
+              src={drawvaxLogo}
+              alt="Drawvax Infotech logo"
+              className="h-10 w-auto shrink-0 rounded-lg object-contain"
+            />
             <span className="min-w-0 leading-tight">
               <span className="block font-display text-base font-bold tracking-tight sm:text-lg">
                 {content.settings.companyName}
