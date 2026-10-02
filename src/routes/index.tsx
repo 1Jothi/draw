@@ -65,7 +65,7 @@ function Home() {
         </Stagger>
       </Section>
 
-      <Testimonials />
+      <Testimonials showPreview />
 
       <Section id="news">
         <SectionHeading

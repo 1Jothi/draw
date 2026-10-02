@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "motion/react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { Section, SectionHeading } from "@/components/ui-kit/Section";
@@ -8,7 +9,13 @@ import { Reveal } from "@/components/motion/Reveal";
 import { approvedReviews, useSiteContent } from "@/store/site-content";
 import { api } from "@/data/api";
 
-export function Testimonials({ withForm = true }: { withForm?: boolean }) {
+export function Testimonials({
+  withForm = true,
+  showPreview = false,
+}: {
+  withForm?: boolean;
+  showPreview?: boolean;
+}) {
   const { reviews, loading } = useSiteContent();
   const approved = approvedReviews(reviews);
   const [index, setIndex] = useState(0);
@@ -172,6 +179,25 @@ export function Testimonials({ withForm = true }: { withForm?: boolean }) {
           </Reveal>
         ) : null}
       </div>
+
+      {showPreview && approved.length > 1 ? (
+        <div className="mt-14">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
+            <h3 className="text-lg font-semibold">More client reviews</h3>
+            <Link
+              to="/reviews"
+              className="glass inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold"
+            >
+              All reviews <ChevronRight className="size-4 text-primary" />
+            </Link>
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {approved.slice(1, 4).map((review) => (
+              <ReviewCard key={review.id} review={review} />
+            ))}
+          </div>
+        </div>
+      ) : null}
     </Section>
   );
 }
