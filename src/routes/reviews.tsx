@@ -18,7 +18,10 @@ export const Route = createFileRoute("/reviews")({
           "Read verified client reviews of Drawvax Infotech and leave your own. Client satisfaction is our signature.",
       },
       { property: "og:title", content: "Client Reviews | Drawvax Infotech" },
-      { property: "og:description", content: "What our clients say about working with Drawvax Infotech." },
+      {
+        property: "og:description",
+        content: "What our clients say about working with Drawvax Infotech.",
+      },
     ],
   }),
   component: ReviewsPage,
@@ -44,9 +47,9 @@ function ReviewsPage() {
       />
       <Testimonials />
       <Section>
-        <Stagger className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <Stagger className="grid min-w-0 grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {approved.map((review) => (
-            <motion.div key={review.id} variants={staggerChild}>
+            <motion.div key={review.id} variants={staggerChild} className="min-w-0">
               <ReviewCard review={review} />
             </motion.div>
           ))}

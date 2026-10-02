@@ -30,9 +30,9 @@ export function ReviewCard({ review }: { review: Review }) {
   const hasStory = review.fullStory && review.fullStory !== review.comment;
 
   return (
-    <div className="glass flex h-full flex-col rounded-3xl p-5 sm:p-6">
+    <div className="glass flex h-full min-w-0 flex-col rounded-3xl p-4 sm:p-5 lg:p-6">
       <Stars rating={review.rating} />
-      <p className="mt-4 flex-1 leading-relaxed text-muted-foreground">
+      <p className="mt-4 flex-1 break-words leading-relaxed text-muted-foreground">
         “{expanded && hasStory ? review.fullStory : review.comment}”
       </p>
       {hasStory ? (
@@ -46,7 +46,12 @@ export function ReviewCard({ review }: { review: Review }) {
       ) : null}
       <div className="mt-6 flex min-w-0 items-center gap-3">
         {review.avatar ? (
-          <img src={review.avatar} alt={`${review.name}`} loading="lazy" className="size-11 shrink-0 rounded-full object-cover" />
+          <img
+            src={review.avatar}
+            alt={`${review.name}`}
+            loading="lazy"
+            className="size-11 shrink-0 rounded-full object-cover"
+          />
         ) : (
           <span className="gradient-accent grid size-11 shrink-0 place-items-center rounded-full text-sm font-bold text-primary-foreground">
             {initials}
@@ -56,7 +61,14 @@ export function ReviewCard({ review }: { review: Review }) {
           <p className="truncate text-sm font-semibold">{review.name}</p>
           <p className="truncate text-xs text-muted-foreground">{review.company}</p>
         </div>
-        {review.companyLogo ? <img src={review.companyLogo} alt={`${review.company} logo`} loading="lazy" className="ml-auto max-h-8 max-w-20 object-contain" /> : null}
+        {review.companyLogo ? (
+          <img
+            src={review.companyLogo}
+            alt={`${review.company} logo`}
+            loading="lazy"
+            className="ml-auto max-h-8 max-w-20 object-contain"
+          />
+        ) : null}
       </div>
     </div>
   );

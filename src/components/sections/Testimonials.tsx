@@ -66,12 +66,13 @@ export function Testimonials({
         subtitle="Real feedback from businesses in India and Kuwait. Every project ends with the same question: are you genuinely satisfied?"
       />
 
-      <div className="mt-12 grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+      <div className="mt-8 grid min-w-0 grid-cols-1 gap-6 sm:mt-12 sm:gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
         <div className="relative min-h-[18rem] min-w-0">
           <AnimatePresence mode="wait">
             {current ? (
               <motion.div
                 key={current.id}
+                className="min-w-0"
                 initial={{ opacity: 0, x: 60 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -60 }}
@@ -114,7 +115,7 @@ export function Testimonials({
 
         {withForm ? (
           <Reveal direction="right">
-            <form onSubmit={submit} className="glass rounded-3xl p-6">
+            <form onSubmit={submit} className="glass min-w-0 rounded-3xl p-4 sm:p-6">
               <h3 className="text-lg font-semibold">Leave a Review</h3>
               <p className="mt-1 text-sm text-muted-foreground">
                 Reviews appear publicly once our team approves them.
@@ -132,7 +133,7 @@ export function Testimonials({
                   placeholder="Company (optional)"
                   className="w-full rounded-xl bg-input/60 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                   <span className="text-sm text-muted-foreground">Rating</span>
                   <div className="flex gap-1">
                     {[1, 2, 3, 4, 5].map((value) => (
@@ -192,7 +193,7 @@ export function Testimonials({
               All reviews <ChevronRight className="size-4 text-primary" />
             </Link>
           </div>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid min-w-0 grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {approved.slice(1, 4).map((review) => (
               <ReviewCard key={review.id} review={review} />
             ))}
