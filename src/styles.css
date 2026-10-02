@@ -192,7 +192,7 @@
 }
 
 @utility animate-marquee {
-  animation: marquee-x 32s linear infinite;
+  animation: marquee-x 60s linear infinite;
 }
 
 @keyframes blob-float {

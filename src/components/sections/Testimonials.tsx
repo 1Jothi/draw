@@ -21,7 +21,7 @@ export function Testimonials({ withForm = true }: { withForm?: boolean }) {
     return () => clearInterval(timer);
   }, [approved.length]);
 
-  const current = approved[index % Math.max(approved.length, 1)];
+  const current = approved[index];
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -73,31 +73,35 @@ export function Testimonials({ withForm = true }: { withForm?: boolean }) {
               </motion.div>
             ) : loading ? (
               <div className="glass h-64 animate-pulse rounded-3xl" />
-            ) : null}
+            ) : (
+              <div className="glass flex h-64 items-center justify-center rounded-3xl p-6 text-center text-sm text-muted-foreground">
+                No approved reviews are available yet.
+              </div>
+            )}
           </AnimatePresence>
-          <div className="mt-5 flex items-center gap-3">
-            <button
-              type="button"
-              aria-label="Previous review"
-              onClick={() => setIndex((value) => (value - 1 + approved.length) % approved.length)}
-              className="glass-soft grid size-10 place-items-center rounded-xl"
-            >
-              <ChevronLeft className="size-4" />
-            </button>
-            <button
-              type="button"
-              aria-label="Next review"
-              onClick={() => setIndex((value) => (value + 1) % approved.length)}
-              className="glass-soft grid size-10 place-items-center rounded-xl"
-            >
-              <ChevronRight className="size-4" />
-            </button>
-            {approved.length ? (
+          {approved.length > 1 ? (
+            <div className="mt-5 flex items-center gap-3">
+              <button
+                type="button"
+                aria-label="Previous review"
+                onClick={() => setIndex((value) => (value - 1 + approved.length) % approved.length)}
+                className="glass-soft grid size-10 place-items-center rounded-xl"
+              >
+                <ChevronLeft className="size-4" />
+              </button>
+              <button
+                type="button"
+                aria-label="Next review"
+                onClick={() => setIndex((value) => (value + 1) % approved.length)}
+                className="glass-soft grid size-10 place-items-center rounded-xl"
+              >
+                <ChevronRight className="size-4" />
+              </button>
               <span className="ml-2 text-xs text-muted-foreground tabular-nums">
-                {(index % approved.length) + 1} / {approved.length}
+                {index + 1} / {approved.length}
               </span>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
         </div>
 
         {withForm ? (
