@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useSiteContent } from "@/store/site-content";
 import { api } from "@/data/api";
 import drawvaxLogo from "@/assets/drawvax-logo.jpg";
+import { isLovableAppUrl } from "@/lib/utils";
 
 export function Footer() {
   const { content } = useSiteContent();
@@ -72,7 +73,7 @@ export function Footer() {
                 { label: "LinkedIn", url: content.contact.linkedin, Icon: Linkedin },
                 { label: "Instagram", url: content.contact.instagram, Icon: Instagram },
               ]
-                .filter((social) => social.url)
+                .filter((social) => social.url && !isLovableAppUrl(social.url))
                 .map(({ label, url, Icon }) => (
                   <motion.a
                     key={label}

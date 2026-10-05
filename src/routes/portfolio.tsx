@@ -7,6 +7,7 @@ import { Section } from "@/components/ui-kit/Section";
 import { PortfolioCard } from "@/components/cards/PortfolioCard";
 import { useSiteContent } from "@/store/site-content";
 import { portfolioCategories, type PortfolioItem } from "@/data/content";
+import { isLovableAppUrl } from "@/lib/utils";
 
 export const Route = createFileRoute("/portfolio")({
   head: () => ({
@@ -111,7 +112,16 @@ function PortfolioPage() {
                   {active.client} · {active.year}
                 </p>
                 <p className="mt-5 leading-relaxed text-muted-foreground">{active.description}</p>
-                {active.url ? <a href={active.url} target="_blank" rel="noreferrer" className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-primary underline underline-offset-4">Visit project</a> : null}
+                {active.url && !isLovableAppUrl(active.url) ? (
+                  <a
+                    href={active.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-primary underline underline-offset-4"
+                  >
+                    Visit project
+                  </a>
+                ) : null}
                 <div className="mt-6 flex flex-wrap gap-2">
                   {active.tech.map((tech) => (
                     <span key={tech} className="glass-soft rounded-lg px-3 py-1.5 text-xs">

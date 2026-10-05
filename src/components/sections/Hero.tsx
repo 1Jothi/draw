@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { SLOGAN } from "@/data/content";
 import { useSiteContent } from "@/store/site-content";
+import { isLovableAppUrl } from "@/lib/utils";
 
 export function Hero() {
   const { content } = useSiteContent();
@@ -65,20 +66,22 @@ export function Hero() {
           transition={{ delay: 1.35, type: "spring", stiffness: 220, damping: 18 }}
           className="mt-9 flex flex-wrap items-center gap-4"
         >
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}>
-            {settings.heroButtonLink.startsWith("https://") ? (
-              <a href={settings.heroButtonLink} target="_blank" rel="noreferrer" className="gradient-accent glow-ring inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold text-primary-foreground">
-                {settings.heroButtonText} <ArrowRight className="size-4" />
-              </a>
-            ) : (
-              <Link
-                to={settings.heroButtonLink as never}
-                className="gradient-accent glow-ring inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold text-primary-foreground"
-              >
-                {settings.heroButtonText} <ArrowRight className="size-4" />
-              </Link>
-            )}
-          </motion.div>
+          {!isLovableAppUrl(settings.heroButtonLink) ? (
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}>
+              {settings.heroButtonLink.startsWith("https://") ? (
+                <a href={settings.heroButtonLink} target="_blank" rel="noreferrer" className="gradient-accent glow-ring inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold text-primary-foreground">
+                  {settings.heroButtonText} <ArrowRight className="size-4" />
+                </a>
+              ) : (
+                <Link
+                  to={settings.heroButtonLink as never}
+                  className="gradient-accent glow-ring inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold text-primary-foreground"
+                >
+                  {settings.heroButtonText} <ArrowRight className="size-4" />
+                </Link>
+              )}
+            </motion.div>
+          ) : null}
         </motion.div>
 
       </div>

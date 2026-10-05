@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, Globe, Linkedin, Mail, Phone, Quote } from "lucide-react";
 import { Section } from "@/components/ui-kit/Section";
 import { useSiteContent } from "@/store/site-content";
+import { isLovableAppUrl } from "@/lib/utils";
 
 function HighlightedBio({ bio, highlight }: { bio: string; highlight: string }) {
   if (!highlight) return <>{bio}</>;
@@ -73,14 +74,16 @@ export function FounderSection() {
           </div>
 
           <div className="mt-6 grid gap-2 sm:grid-cols-2">
-            <a
-              href={founder.linkedin}
-              target="_blank"
-              rel="noreferrer"
-              className="glass-soft inline-flex min-w-0 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-transform hover:-translate-y-0.5"
-            >
-              <Linkedin className="size-4 shrink-0 text-primary" /> LinkedIn
-            </a>
+            {founder.linkedin && !isLovableAppUrl(founder.linkedin) ? (
+              <a
+                href={founder.linkedin}
+                target="_blank"
+                rel="noreferrer"
+                className="glass-soft inline-flex min-w-0 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-transform hover:-translate-y-0.5"
+              >
+                <Linkedin className="size-4 shrink-0 text-primary" /> LinkedIn
+              </a>
+            ) : null}
             <a
               href={`mailto:${founder.email}`}
               className="glass-soft inline-flex min-w-0 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-transform hover:-translate-y-0.5"
@@ -93,7 +96,7 @@ export function FounderSection() {
             >
               <Phone className="size-4 shrink-0 text-primary" /> <span className="truncate">{founder.phone}</span>
             </a>
-            {founder.website ? (
+            {founder.website && !isLovableAppUrl(founder.website) ? (
               <a
                 href={founder.website}
                 target="_blank"

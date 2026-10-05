@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
 import { staggerChild } from "@/components/motion/Reveal";
 import { getClientLogoUrl, type Client } from "@/data/content";
+import { isLovableAppUrl } from "@/lib/utils";
 
 /** Flip card — hover (or tap on mobile) reveals collaboration details. */
 export function ClientCard({ client }: { client: Client }) {
@@ -22,7 +23,16 @@ export function ClientCard({ client }: { client: Client }) {
           <h3 className="text-lg font-semibold">{client.name}</h3>
           <p className="text-xs tracking-[0.18em] text-muted-foreground uppercase">{client.industry}</p>
           <p className="text-sm text-muted-foreground">{client.details}</p>
-          {client.website ? <a href={client.website} target="_blank" rel="noreferrer" className="min-h-10 text-sm text-primary underline underline-offset-4">Visit website</a> : null}
+          {client.website && !isLovableAppUrl(client.website) ? (
+            <a
+              href={client.website}
+              target="_blank"
+              rel="noreferrer"
+              className="min-h-10 text-sm text-primary underline underline-offset-4"
+            >
+              Visit website
+            </a>
+          ) : null}
         </div>
         <div className="glass absolute inset-0 flex flex-col justify-center gap-3 rounded-3xl p-6 [backface-visibility:hidden] [transform:rotateY(180deg)]">
           <p className="text-xs font-semibold tracking-[0.18em] gradient-text uppercase">

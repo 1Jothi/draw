@@ -8,6 +8,7 @@ import { Section } from "@/components/ui-kit/Section";
 import { Reveal } from "@/components/motion/Reveal";
 import { useSiteContent } from "@/store/site-content";
 import { api } from "@/data/api";
+import { isLovableAppUrl } from "@/lib/utils";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -151,7 +152,7 @@ function ContactPage() {
                 {[
                   { label: "LinkedIn", url: content.contact.linkedin },
                   { label: "Instagram", url: content.contact.instagram },
-                ].filter((s) => s.url).map((social) => (
+                ].filter((social) => social.url && !isLovableAppUrl(social.url)).map((social) => (
                   <motion.a
                     key={social.label}
                     href={social.url}
