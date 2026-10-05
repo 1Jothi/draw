@@ -120,16 +120,16 @@ export function AboutSection() {
             {[...content.clients, ...content.clients].map((client, index) => (
               <div
                 key={`${client.id}-${index}`}
-                className="glass-soft grid h-20 w-44 shrink-0 place-items-center rounded-2xl px-3 text-center text-xs font-semibold text-muted-foreground transition-all duration-300 hover:scale-105 hover:text-foreground sm:w-48"
+                className="glass-soft flex h-24 w-48 shrink-0 items-center justify-center rounded-2xl px-3 text-center text-xs font-semibold text-muted-foreground transition-all duration-300 hover:scale-105 hover:text-foreground sm:w-52"
               >
                 {getClientLogoUrl(client.logo) ? (
-                  <span className="block h-14 w-36 overflow-hidden rounded-xl bg-foreground p-1.5">
+                  <span className="flex h-20 w-full items-center justify-center overflow-hidden rounded-xl bg-foreground p-2">
                     <img
                       src={getClientLogoUrl(client.logo)}
                       alt={`${client.name} logo`}
                       loading="lazy"
                       decoding="async"
-                      className="block h-full w-full object-contain"
+                      className="block max-h-full max-w-full object-contain"
                     />
                   </span>
                 ) : (

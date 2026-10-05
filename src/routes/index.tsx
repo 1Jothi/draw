@@ -8,7 +8,7 @@ import { Testimonials } from "@/components/sections/Testimonials";
 import { Section, SectionHeading } from "@/components/ui-kit/Section";
 import { Stagger } from "@/components/motion/Reveal";
 import { CategoryLink, HierarchyCard } from "@/components/cards/ServiceCard";
-import { POWER_TAGLINE, SLOGAN } from "@/data/content";
+import { getClientLogoUrl, POWER_TAGLINE, SLOGAN } from "@/data/content";
 import { NewsCard } from "@/components/cards/NewsCard";
 import { useSiteContent } from "@/store/site-content";
 
@@ -33,12 +33,57 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const { content, news, loading } = useSiteContent();
+  const featuredClients = content.clients
+    .filter((client) => client.enabled !== false && getClientLogoUrl(client.logo))
+    .sort((first, second) => (first.sortOrder ?? 0) - (second.sortOrder ?? 0))
+    .slice(0, 12);
 
   return (
     <>
       <Hero />
       <AboutSection />
       <FounderSection />
+
+      <Section id="home-clients">
+        <SectionHeading
+          eyebrow="Trusted partnerships"
+          title={
+            <>
+              Brands that grow with <span className="gradient-text">Drawvax</span>
+            </>
+          }
+          subtitle="A few of the businesses we've supported across India and Kuwait."
+        />
+        <Stagger className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
+          {featuredClients.map((client) => (
+            <div
+              key={client.id}
+              className="glass-soft group flex min-h-44 flex-col items-center justify-center gap-3 rounded-2xl p-4 text-center transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg"
+            >
+              <span className="flex h-24 w-full items-center justify-center overflow-hidden rounded-2xl bg-white p-3">
+                <img
+                  src={getClientLogoUrl(client.logo)}
+                  alt={`${client.name} logo`}
+                  loading="lazy"
+                  decoding="async"
+                  className="block max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
+                />
+              </span>
+              <span className="line-clamp-1 text-sm font-medium text-muted-foreground group-hover:text-foreground">
+                {client.name}
+              </span>
+            </div>
+          ))}
+        </Stagger>
+        <div className="mt-8 text-center">
+          <Link
+            to="/clients"
+            className="gradient-accent glow-ring inline-flex min-h-11 items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-primary-foreground"
+          >
+            See more clients <ArrowRight className="size-4" />
+          </Link>
+        </div>
+      </Section>
 
       <Section id="services">
         <SectionHeading
