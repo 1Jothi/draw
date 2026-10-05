@@ -262,7 +262,7 @@ const founder: Founder = {
   linkedin: "https://www.linkedin.com/in/murugu-santhosh-193057365/",
   email: "drawvaxinfotech.off@gmail.com",
   phone: "+91 6374025393",
-  website: "https://drawvax-effect.lovable.app",
+  website: "",
   credit: "This website was personally built and managed under his direction.",
 };
 
